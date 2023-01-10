@@ -1,0 +1,53 @@
+article {
+	width: 80vw;
+	background: rgba(241, 242, 229, .4);
+	/*凝脂白*/
+	border-style: solid;
+	border-color: black;
+	border-top: 2px;
+	border-bottom: 2px;
+	padding: 64px 52PX;
+}
+
+article p {
+	font-size: 18px;
+	text-indent: 2em;
+	line-height: 28px;
+	margin-bottom: 10px;
+	margin-top: 10px;
+}
+
+article h3 {
+	text-align: center;
+	font-size: 30px;
+	margin-top: 30px;
+	margin-bottom: 30px;
+}
+
+article h3:before {
+	color: rgba(178, 182, 182, .8);
+	/*月魄*/
+	content: "\00A0\00A0\00A0\00A0\00A0\00A0-----------------\00A0\00A0\00A0\00A0\00A0\00A0";
+}
+
+article h3:after {
+	color: rgba(178, 182, 182, .8);
+	/*月魄*/
+	content: "\00A0\00A0\00A0\00A0\00A0\00A0-----------------\00A0\00A0\00A0\00A0\00A0\00A0";
+}
+
+article del {
+	background: rgba(0, 0, 0, 1);
+	transition: 1.5s;
+}
+
+article del:hover {
+	background: rgba(0, 0, 0, 0);
+	color: rgba(216, 8, 53, .8);
+	/*朱砂*/
+}
+
+article h2 {
+	text-align: center;
+	font-size: 52px;
+}

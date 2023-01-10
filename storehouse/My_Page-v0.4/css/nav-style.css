@@ -1,0 +1,120 @@
+/* *{
+	margin: 0px;
+	padding: 0px;
+	overflow: hidden;
+} */
+/* body{
+	height: 100vh;
+	width: 100vw;
+	display: flex;
+	justify-content: space-around;
+	align-items: center;
+	background: rgb(241,242,229);
+	/*凝脂白*/
+
+nav {
+	height: 80px;
+	width: 80px;
+	overflow: hidden;
+	border-radius: 20px;
+	display: flex;
+	/*改*/
+	justify-content: center;
+	align-items: center;
+	transition: .8s;
+	background: rgba(104, 107, 104, .4);
+	/*石涅*/
+}
+
+nav:hover {
+	height: 100px;
+	/* 	width: 750px; */
+	width: 60vw;
+	/*+*/
+	border-radius: 25px;
+}
+
+nav:hover div {
+	height: 75px;
+	width: 75px;
+	border-radius: 50%;
+	/*+*/
+	margin-left: 25px;
+	margin-right: 25px;
+}
+
+nav:hover div:not(.nav-home) {
+	height: 70px;
+	width: 70px;
+	border-radius: 50%;
+}
+
+nav .nav-home {
+	height: 50px;
+	width: 50px;
+	border: solid rgba(255, 255, 255, 0) 0px;
+	border-radius: 50%;
+	transition: .8s;
+}
+
+nav .nav-home:hover {
+	height: 88px;
+	width: 88px;
+	border: solid rgba(255, 255, 255, 0) 0px;
+	border-radius: 50%;
+}
+
+nav .nav-home>a>img {
+	border-radius: 50%;
+}
+
+nav>div:not(.nav-home) {
+	overflow: hidden;
+	height: 0px;
+	width: 0px;
+	border: solid rgba(255, 255, 255, 0) 0px;
+	transition: .8s;
+}
+
+nav>div:not(.nav-home):hover {
+	height: 86px;
+	width: 86px;
+	border: solid rgba(255, 255, 255, 0) 0px;
+	border-radius: 50%;
+}
+
+nav>div>a>img {
+	width: 100%;
+	height: 100%;
+	object-fit: cover;
+}
+
+nav>div:nth-child(1):hover {
+	border: solid rgba(255, 255, 255, 0) 5px;
+	background: rgba(174, 208, 237, 1);
+	/*碧落*/
+}
+
+nav>div:nth-child(2):hover {
+	border: solid rgba(255, 255, 255, 0) 5px;
+	background: rgb(165, 154, 202, 1);
+	/*雪青*/
+}
+
+nav>div:nth-child(3):hover {
+	border: solid rgba(255, 255, 255, 0) 5px;
+	background: rgba(255, 179, 186, 1);
+	/*春梅粉*/
+}
+
+nav>div:nth-child(4):hover {
+	border: solid rgba(255, 255, 255, 0) 5px;
+	background: rgba(219, 90, 108, 1);
+	/*海棠*/
+}
+
+nav>div:nth-child(5):hover {
+	border: solid rgba(255, 255, 255, 0) 5px;
+	background: rgb(11, 50, 140, 1);
+	/*群青*/
+}
