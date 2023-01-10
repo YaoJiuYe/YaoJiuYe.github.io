@@ -11,7 +11,7 @@ body{
     display: flex;
     justify-content: center;
     align-items: center;
-    background: url("../img/bg.png");
+    background: url("../img/bg.png") no-repeat;
 }
 
 .card{
