@@ -1,79 +1,449 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
-
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Board Game</title>
-  <link rel="stylesheet" href="style.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>？</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background: linear-gradient(135deg, #1a1a2e, #16213e);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            overflow-x: hidden;
+            padding: 20px;
+        }
+        
+        .container {
+            position: relative;
+            max-width: 1200px;
+            width: 100%;
+            padding: 30px;
+            text-align: center;
+        }
+        
+        .header {
+            color: #fff;
+            margin-bottom: 30px;
+            text-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
+        }
+        
+        .header h1 {
+            font-size: 2.8rem;
+            margin-bottom: 15px;
+            background: linear-gradient(90deg, #4facfe, #00f2fe);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        
+        .header p {
+            font-size: 1.2rem;
+            opacity: 0.8;
+            max-width: 800px;
+            margin: 0 auto;
+            line-height: 1.6;
+        }
+        
+        .controls {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin: 25px 0;
+            flex-wrap: wrap;
+        }
+        
+        .btn {
+            padding: 12px 25px;
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            border: 2px solid #4facfe;
+            border-radius: 50px;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(5px);
+        }
+        
+        .btn:hover {
+            background: rgba(79, 172, 254, 0.3);
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+        }
+        
+        .honeycomb-grid {
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin: 20px auto;
+            padding: 20px;
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 20px;
+            max-width: fit-content;
+        }
+        
+        .honeycomb-row {
+            display: flex;
+            margin-bottom: -26px;
+        }
+        
+        .hexagon {
+            position: relative;
+            width: 80px;
+            height: 92px;
+            margin: 0 4px;
+            clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 22px;
+            font-weight: bold;
+            color: rgba(0, 0, 0, 0.85);
+            transition: all 0.3s ease;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
+            cursor: pointer;
+        }
+        
+        .hexagon:hover {
+            transform: scale(1.1);
+            z-index: 10;
+            box-shadow: 0 0 20px rgba(255, 255, 255, 0.5);
+        }
+        
+        .hexagon .hex-text {
+            pointer-events: none;
+            user-select: none;
+            text-shadow: 0 0 4px rgba(255, 255, 255, 0.7);
+            font-size: 24px;
+            transition: all 0.3s ease;
+        }
+        
+        .hexagon input {
+            background: transparent;
+            border: none;
+            outline: none;
+            width: 100%;
+            text-align: center;
+            font-weight: bold;
+            color: rgba(0, 0, 0, 0.85);
+            font-size: 22px;
+            pointer-events: auto;
+        }
+        
+        .lightgreen { background-color: #90ee90; }
+        .darkgreen { background-color: #006400; }
+        .yellow { background-color: #ffd700; }
+        .brown { background-color: #8b4513; }
+        .blue { background-color: #1e90ff; }
+        .gray { background-color: #a9a9a9; }
+        
+        .legend {
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 20px;
+            margin-top: 40px;
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            backdrop-filter: blur(10px);
+            max-width: 700px;
+            margin: 40px auto;
+        }
+        
+        .legend-item {
+            display: flex;
+            align-items: center;
+            color: white;
+            font-size: 16px;
+            padding: 8px 15px;
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 8px;
+        }
+        
+        .color-box {
+            width: 25px;
+            height: 25px;
+            margin-right: 10px;
+            border-radius: 4px;
+            box-shadow: 0 0 5px rgba(0, 0, 0, 0.3);
+        }
+        
+        .instructions {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            padding: 20px;
+            margin: 30px auto;
+            max-width: 800px;
+            color: white;
+        }
+        
+        .instructions h2 {
+            color: #4facfe;
+            margin-bottom: 15px;
+        }
+        
+        .instructions ul {
+            text-align: left;
+            padding-left: 25px;
+            line-height: 1.8;
+        }
+        
+        .instructions li {
+            margin-bottom: 10px;
+        }
+        
+        .row-label {
+            position: absolute;
+            left: -100px;
+            color: white;
+            font-size: 16px;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            height: 92px;
+            background: rgba(79, 172, 254, 0.3);
+            padding: 0 15px;
+            border-radius: 8px;
+            min-width: 80px;
+            justify-content: center;
+        }
+        
+        .row-0 { top: 0; }
+        .row-1 { top: 70px; }
+        .row-2 { top: 140px; }
+        .row-3 { top: 210px; }
+        .row-4 { top: 280px; }
+        .row-5 { top: 350px; }
+        .row-6 { top: 420px; }
+        
+        .floating-hex {
+            position: absolute;
+            width: 30px;
+            height: 34.5px;
+            clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
+            opacity: 0.2;
+            animation: float 15s infinite linear;
+            z-index: -1;
+        }
+        
+        @keyframes float {
+            0% { transform: translateY(0) rotate(0deg); }
+            100% { transform: translateY(-100vh) rotate(360deg); }
+        }
+        
+        @media (max-width: 900px) {
+            .honeycomb-grid {
+                transform: scale(0.8);
+            }
+        }
+        
+        @media (max-width: 700px) {
+            .honeycomb-grid {
+                transform: scale(0.65);
+            }
+            
+            .header h1 {
+                font-size: 2.2rem;
+            }
+            
+            .header p {
+                font-size: 1rem;
+            }
+        }
+    </style>
 </head>
-
 <body>
-  <div class="board">
-    <div class="row">
-      <div class="hex green" data-color="green">
-        <div class="die"></div>
-        <div class="building"></div>
-      </div>
-      <div class="hex green" data-color="green">
-        <div class="die"></div>
-        <div class="building"></div>
-      </div>
-      <div class="hex green" data-color="green">
-        <div class="die"></div>
-        <div class="building"></div>
-      </div>
-      <div class="hex yellow" data-color="yellow">
-        <div class="die"></div>
-        <div class="building"></div>
-      </div>
-    </div>
-    <div class="row">
-      <div class="hex green" data-color="green">
-        <div class="die"></div>
-        <div class="building"></div>
-      </div>
-      <div class="hex green" data-color="green">
-        <div class="die"></div>
-        <div class="building"></div>
-      </div>
-      <div class="hex green" data-color="green">
-        <div class="die"></div>
-        <div class="building"></div>
-      </div>
-      <div class="hex yellow" data-color="yellow">
-        <div class="die"></div>
-        <div class="building"></div>
-      </div>
-      <div class="hex brown" data-color="brown">
-        <div class="die"></div>
-        <div class="building"></div>
-      </div>
-    </div>
-    <div class="row">
-      <div class="hex green" data-color="green">
-        <div class="die"></div>
-        <div class="building"></div>
-      </div>
-      <div class="hex green" data-color="green">
-        <div class="die"></div>
-        <div class="building"></div>
-      </div>
-      <div class="hex green" data-color="green">
-        <div class="die"></div>
-        <div class="building"></div>
-      </div>
-      <div class="hex yellow" data-color="yellow">
-        <div class="die"></div>
-        <div class="building"></div>
-      </div>
-      <div class="hex brown" data-color="brown">
-        <div class="die"></div>
-        <div class="building"></div>
-      </div>
-    </div>
-  </div>
-  <script src="script.js"></script>
-</body>
+    <div class="container">
+        <div class="header">
+            <h1></h1>
+            <p></p>
+        </div>
+        
+        <div class="controls">
+            <button class="btn" id="showAll">显示所有数字</button>
+            <button class="btn" id="hideAll">隐藏所有数字</button>
+            <button class="btn" id="resetAll">重置所有内容</button>
+        </div>
+        
+        <div class="honeycomb-grid">
 
+            
+            <!-- 第1行: 4个六边形 -->
+            <div class="honeycomb-row">
+                <div class="hexagon lightgreen"><span class="hex-text">6</span></div>
+                <div class="hexagon darkgreen"><span class="hex-text">5</span></div>
+                <div class="hexagon darkgreen"><span class="hex-text">4</span></div>
+                <div class="hexagon yellow"><span class="hex-text">3</span></div>
+            </div>
+            
+            <!-- 第2行: 5个六边形 -->
+            <div class="honeycomb-row">
+                <div class="hexagon lightgreen"><span class="hex-text">2</span></div>
+                <div class="hexagon lightgreen"><span class="hex-text">1</span></div>
+                <div class="hexagon darkgreen"><span class="hex-text">6</span></div>
+                <div class="hexagon yellow"><span class="hex-text">5</span></div>
+                <div class="hexagon brown"><span class="hex-text">4</span></div>
+            </div>
+            
+            <!-- 第3行: 6个六边形 -->
+            <div class="honeycomb-row">
+                <div class="hexagon lightgreen"><span class="hex-text">5</span></div>
+                <div class="hexagon lightgreen"><span class="hex-text">4</span></div>
+                <div class="hexagon brown"><span class="hex-text">3</span></div>
+                <div class="hexagon yellow"><span class="hex-text">1</span></div>
+                <div class="hexagon brown"><span class="hex-text">2</span></div>
+                <div class="hexagon brown"><span class="hex-text">3</span></div>
+            </div>
+            
+            <!-- 第4行: 7个六边形 -->
+            <div class="honeycomb-row">
+                <div class="hexagon blue"><span class="hex-text">6</span></div>
+                <div class="hexagon blue"><span class="hex-text">1</span></div>
+                <div class="hexagon blue"><span class="hex-text">2</span></div>
+                <div class="hexagon darkgreen"><span class="hex-text">6</span></div>
+                <div class="hexagon blue"><span class="hex-text">5</span></div>
+                <div class="hexagon blue"><span class="hex-text">4</span></div>
+                <div class="hexagon blue"><span class="hex-text">1</span></div>
+            </div>
+            
+            <!-- 第5行: 6个六边形 -->
+            <div class="honeycomb-row">
+                <div class="hexagon brown"><span class="hex-text">2</span></div>
+                <div class="hexagon brown"><span class="hex-text">5</span></div>
+                <div class="hexagon gray"><span class="hex-text">4</span></div>
+                <div class="hexagon brown"><span class="hex-text">3</span></div>
+                <div class="hexagon brown"><span class="hex-text">1</span></div>
+                <div class="hexagon lightgreen"><span class="hex-text">2</span></div>
+            </div>
+            
+            <!-- 第6行: 5个六边形 -->
+            <div class="honeycomb-row">
+                <div class="hexagon brown"><span class="hex-text">6</span></div>
+                <div class="hexagon gray"><span class="hex-text">1</span></div>
+                <div class="hexagon yellow"><span class="hex-text">2</span></div>
+                <div class="hexagon brown"><span class="hex-text">5</span></div>
+                <div class="hexagon brown"><span class="hex-text">6</span></div>
+            </div>
+            
+            <!-- 第7行: 4个六边形 -->
+            <div class="honeycomb-row">
+                <div class="hexagon gray"><span class="hex-text">3</span></div>
+                <div class="hexagon yellow"><span class="hex-text">4</span></div>
+                <div class="hexagon yellow"><span class="hex-text">1</span></div>
+                <div class="hexagon brown"><span class="hex-text">3</span></div>
+            </div>
+        </div>
+        
+
+        
+
+    </div>
+    
+    <script>
+        // 为每个六边形添加交互功能
+        document.querySelectorAll('.hexagon').forEach(hex => {
+            const originalText = hex.querySelector('.hex-text').textContent;
+            let isTextHidden = false;
+            let customText = '';
+            
+            hex.addEventListener('click', function() {
+                const textElement = this.querySelector('.hex-text');
+                
+                if (this.querySelector('input')) {
+                    // 如果已有输入框，则不做操作
+                    return;
+                }
+                
+                if (!isTextHidden) {
+                    // 第一次点击：隐藏文本
+                    textElement.style.opacity = '0';
+                    isTextHidden = true;
+                } else {
+                    // 第二次点击：创建输入框
+                    textElement.style.opacity = '0';
+                    const input = document.createElement('input');
+                    input.type = 'text';
+                    input.value = customText || originalText;
+                    input.maxLength = 3;
+                    this.appendChild(input);
+                    input.focus();
+                    
+                    // 保存输入内容
+                    input.addEventListener('blur', function() {
+                        customText = this.value;
+                        hex.removeChild(this);
+                        textElement.textContent = customText || originalText;
+                        textElement.style.opacity = '1';
+                    });
+                    
+                    // 按Enter键保存
+                    input.addEventListener('keydown', function(e) {
+                        if (e.key === 'Enter') {
+                            this.blur();
+                        }
+                    });
+                }
+            });
+        });
+        
+        // 控制按钮功能
+        document.getElementById('showAll').addEventListener('click', function() {
+            document.querySelectorAll('.hex-text').forEach(text => {
+                text.style.opacity = '1';
+            });
+        });
+        
+        document.getElementById('hideAll').addEventListener('click', function() {
+            document.querySelectorAll('.hex-text').forEach(text => {
+                text.style.opacity = '0';
+            });
+        });
+        
+        document.getElementById('resetAll').addEventListener('click', function() {
+            // 重置所有六边形为初始状态
+            document.querySelectorAll('.hexagon').forEach((hex, index) => {
+                const text = hex.querySelector('.hex-text');
+                const originalText = hex.querySelector('.hex-text').textContent;
+                text.style.opacity = '1';
+                text.textContent = originalText;
+                
+                // 移除输入框
+                const input = hex.querySelector('input');
+                if (input) hex.removeChild(input);
+            });
+        });
+        
+        // 创建浮动六边形背景
+        for (let i = 0; i < 25; i++) {
+            const hex = document.createElement('div');
+            hex.classList.add('floating-hex');
+            
+            // 随机位置
+            const left = Math.random() * 100;
+            const delay = Math.random() * 15;
+            
+            // 随机颜色
+            const colors = ['lightgreen', 'darkgreen', 'yellow', 'brown', 'blue', 'gray'];
+            const color = colors[Math.floor(Math.random() * colors.length)];
+            hex.classList.add(color);
+            
+            // 设置样式
+            hex.style.left = `${left}vw`;
+            hex.style.animationDelay = `-${delay}s`;
+            hex.style.opacity = Math.random() * 0.2 + 0.1;
+            hex.style.transform = `scale(${Math.random() * 0.7 + 0.3})`;
+            
+            document.body.appendChild(hex);
+        }
+    </script>
+</body>
 </html>
