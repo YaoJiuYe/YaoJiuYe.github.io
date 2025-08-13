@@ -1,0 +1,1201 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>魔法生日倒计时</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
+    
+    <!-- 配置Tailwind自定义颜色和字体 -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        fairyPink: '#FFB6C1',
+                        fairyBlue: '#87CEFA',
+                        fairyPurple: '#DDA0DD',
+                        fairyYellow: '#FFFACD',
+                        fairyGreen: '#98FB98',
+                        fairyPrimary: '#FF9EB5',
+                        fairySecondary: '#FFC3A0',
+                    },
+                    fontFamily: {
+                        fairy: ['Comic Sans MS', 'Bubblegum Sans', 'cursive'],
+                    },
+                }
+            }
+        }
+    </script>
+    
+    <style type="text/tailwindcss">
+        @layer utilities {
+            .text-shadow {
+                text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
+            }
+            .text-glow {
+                text-shadow: 0 0 10px rgba(255, 255, 255, 0.7);
+            }
+            .floating {
+                animation: floating 6s ease-in-out infinite;
+            }
+            .floating-delay-1 {
+                animation: floating 6s ease-in-out 1s infinite;
+            }
+            .floating-delay-2 {
+                animation: floating 6s ease-in-out 2s infinite;
+            }
+            .spin-slow {
+                animation: spin 20s linear infinite;
+            }
+            .pulse-slow {
+                animation: pulse 4s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+            }
+            .scale-hover {
+                transition: transform 0.3s ease;
+            }
+            .scale-hover:hover {
+                transform: scale(1.1);
+            }
+            .twinkle {
+                animation: twinkle 3s ease-in-out infinite;
+            }
+            .bounce {
+                animation: bounce 1.5s ease-in-out infinite;
+            }
+            .fade-in {
+                animation: fadeIn 0.5s ease-out forwards;
+            }
+        }
+        
+        @keyframes floating {
+            0% { transform: translateY(0px); }
+            50% { transform: translateY(-20px); }
+            100% { transform: translateY(0px); }
+        }
+        
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+        
+        @keyframes twinkle {
+            0%, 100% { opacity: 0.3; }
+            50% { opacity: 1; }
+        }
+        
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-15px); }
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .fairy-card {
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+            z-index: 1; /* 修复遮挡问题 */
+        }
+        
+        .fairy-card::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(255,255,255,0.2) 0%, transparent 70%);
+            transform: rotate(30deg);
+            z-index: -1; /* 修复遮挡问题 */
+        }
+        
+        .fairy-card:hover {
+            transform: translateY(-5px) scale(1.02);
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.2);
+        }
+        
+        .fairy-button {
+            background: linear-gradient(135deg, #FF9EB5, #FFC3A0);
+            color: white;
+            font-weight: bold;
+            border-radius: 12px;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(255, 158, 181, 0.3);
+            position: relative;
+            overflow: hidden;
+            z-index: 1;
+        }
+        
+        .fairy-button::after {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(255,255,255,0.3) 0%, transparent 70%);
+            transform: rotate(30deg);
+            z-index: -1;
+            transition: all 0.5s ease;
+        }
+        
+        .fairy-button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 20px rgba(255, 158, 181, 0.5);
+        }
+        
+        .fairy-button:hover::after {
+            transform: rotate(90deg);
+        }
+        
+        .fairy-input {
+            border: 2px solid rgba(255, 158, 181, 0.3);
+            border-radius: 12px;
+            background: rgba(255, 255, 255, 0.9);
+            transition: all 0.3s ease;
+            padding: 12px 16px;
+            font-size: 16px;
+        }
+        
+        .fairy-input:focus {
+            outline: none;
+            border-color: #FF9EB5;
+            box-shadow: 0 0 0 3px rgba(255, 158, 181, 0.2);
+        }
+        
+        .add-form {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            z-index: 100;
+            transition: all 0.4s cubic-bezier(0.68, -0.55, 0.27, 1.55);
+            transform: translateY(100px) scale(0.8);
+            opacity: 0;
+            visibility: hidden;
+        }
+        
+        .add-form.visible {
+            transform: translateY(0) scale(1);
+            opacity: 1;
+            visibility: visible;
+        }
+        
+        /* 音乐控制样式 */
+        .music-container {
+            position: fixed;
+            top: 4px;
+            right: 4px;
+            z-index: 50;
+            transition: all 0.3s ease;
+        }
+        
+        .music-button {
+            background: rgba(255, 255, 255, 0.8);
+            padding: 10px;
+            border-radius: 50%;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+            backdrop-filter: blur(10px);
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 44px;
+            height: 44px;
+        }
+        
+        .music-button:hover {
+            transform: scale(1.1);
+        }
+        
+        .music-controls {
+            background: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            box-shadow: 0 5px 25px rgba(0, 0, 0, 0.15);
+            padding: 20px;
+            width: 320px;
+            position: absolute;
+            top: 0;
+            right: 0;
+            transform-origin: top right;
+            transform: scale(0.8);
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            z-index: 100;
+        }
+        
+        .music-container:hover .music-controls {
+            transform: scale(1);
+            opacity: 1;
+            visibility: visible;
+            top: calc(100% + 15px);
+        }
+        
+        .music-info {
+            text-align: center;
+            margin-bottom: 15px;
+            max-width: 100%;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            color: #555;
+            font-size: 15px;
+            font-weight: 500;
+        }
+        
+        .control-buttons {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 20px;
+            margin: 15px 0;
+        }
+        
+        .control-btn {
+            background: transparent;
+            border: none;
+            color: #FF9EB5;
+            font-size: 20px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            width: 36px;
+            height: 36px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+        }
+        
+        .control-btn:hover {
+            color: #FF6B8B;
+            background: rgba(255, 158, 181, 0.1);
+            transform: scale(1.15);
+        }
+        
+        .play-btn {
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #FF9EB5, #FFC3A0);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+            box-shadow: 0 4px 10px rgba(255, 158, 181, 0.3);
+        }
+        
+        .play-btn:hover {
+            transform: scale(1.1);
+            box-shadow: 0 6px 15px rgba(255, 158, 181, 0.4);
+        }
+        
+        .volume-control {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-top: 15px;
+        }
+        
+        .volume-slider {
+            flex-grow: 1;
+            -webkit-appearance: none;
+            height: 5px;
+            border-radius: 3px;
+            background: #e0e0e0;
+            outline: none;
+            transition: all 0.2s ease;
+        }
+        
+        .volume-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            background: #FF9EB5;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+        }
+        
+        .volume-slider::-webkit-slider-thumb:hover {
+            background: #FF6B8B;
+            transform: scale(1.2);
+            box-shadow: 0 3px 8px rgba(0, 0, 0, 0.3);
+        }
+        
+        .music-visualizer {
+            height: 30px;
+            display: flex;
+            align-items: flex-end;
+            gap: 4px;
+            justify-content: center;
+            margin: 15px 0;
+        }
+        
+        .visualizer-bar {
+            width: 4px;
+            background: linear-gradient(to top, #FF9EB5, #FFC3A0);
+            border-radius: 2px;
+            transition: height 0.15s ease;
+        }
+        
+        .progress-container {
+            width: 100%;
+            height: 4px;
+            background: #e0e0e0;
+            border-radius: 2px;
+            margin: 10px 0;
+            overflow: hidden;
+            cursor: pointer;
+        }
+        
+        .progress-bar {
+            height: 100%;
+            background: linear-gradient(to right, #FF9EB5, #FFC3A0);
+            border-radius: 2px;
+            width: 0%;
+            transition: width 0.1s linear;
+        }
+        
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 12px;
+            padding: 15px 20px;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.15);
+            transform: translateX(150%);
+            transition: transform 0.4s cubic-bezier(0.68, -0.55, 0.27, 1.55);
+            z-index: 200;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            max-width: 350px;
+        }
+        
+        .notification.show {
+            transform: translateX(0);
+        }
+        
+        .notification-icon {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #FF9EB5, #FFC3A0);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 18px;
+            flex-shrink: 0;
+        }
+        
+        .notification-content {
+            flex-grow: 1;
+        }
+        
+        .notification-title {
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 4px;
+        }
+        
+        .notification-message {
+            color: #666;
+            font-size: 14px;
+        }
+        
+        .close-notification {
+            background: transparent;
+            border: none;
+            color: #999;
+            font-size: 18px;
+            cursor: pointer;
+            transition: color 0.2s;
+            flex-shrink: 0;
+        }
+        
+        .close-notification:hover {
+            color: #FF6B8B;
+        }
+        
+        .birthday-highlight {
+            animation: highlight 2s ease;
+            box-shadow: 0 0 20px rgba(255, 215, 0, 0.7);
+        }
+        
+        @keyframes highlight {
+            0% { box-shadow: 0 0 5px rgba(255, 215, 0, 0.3); }
+            50% { box-shadow: 0 0 30px rgba(255, 215, 0, 0.9); }
+            100% { box-shadow: 0 0 5px rgba(255, 215, 0, 0.3); }
+        }
+        
+        /* 气泡动画 */
+        @keyframes floatUp {
+            0% { 
+                transform: translateY(0) translateX(0) scale(0.5); 
+                opacity: 0; 
+            }
+            10% { opacity: 1; }
+            90% { opacity: 0.8; }
+            100% { 
+                transform: translateY(-100vh) translateX(var(--translateX)) scale(1.2); 
+                opacity: 0; 
+            }
+        }
+        
+        /* 主题背景类 */
+        .bg-theme-fairyPink {
+            background: linear-gradient(to bottom right, rgba(255, 182, 193, 0.3), rgba(255, 182, 193, 0.1));
+        }
+        .bg-theme-fairyBlue {
+            background: linear-gradient(to bottom right, rgba(135, 206, 250, 0.3), rgba(135, 206, 250, 0.1));
+        }
+        .bg-theme-fairyPurple {
+            background: linear-gradient(to bottom right, rgba(221, 160, 221, 0.3), rgba(221, 160, 221, 0.1));
+        }
+        .bg-theme-fairyYellow {
+            background: linear-gradient(to bottom right, rgba(255, 250, 205, 0.3), rgba(255, 250, 205, 0.1));
+        }
+        .bg-theme-fairyGreen {
+            background: linear-gradient(to bottom right, rgba(152, 251, 152, 0.3), rgba(152, 251, 152, 0.1));
+        }
+    </style>
+</head>
+<body class="min-h-screen font-fairy transition-colors duration-700 bg-theme-fairyPink relative overflow-x-hidden">
+    <!-- 动态背景元素 -->
+    <div class="fixed inset-0 pointer-events-none z-0">
+        <div class="floating absolute top-10 left-[10%] text-4xl text-white/70">✨</div>
+        <div class="floating-delay-1 absolute top-20 right-[15%] text-3xl text-white/70">🎈</div>
+        <div class="floating-delay-2 absolute bottom-20 left-[20%] text-5xl text-white/70">🎁</div>
+        <div class="floating absolute bottom-40 right-[25%] text-4xl text-white/70">🍭</div>
+        <div class="floating-delay-1 absolute top-1/3 right-[10%] text-3xl text-white/70">🦄</div>
+        <div class="floating-delay-2 absolute top-1/2 left-[5%] text-4xl text-white/70">🌈</div>
+        <div class="floating absolute top-1/4 left-[25%] text-4xl text-white/70">🌟</div>
+        <div class="twinkle absolute top-1/5 right-[30%] text-3xl text-white/60">🔮</div>
+        <div class="bounce absolute bottom-1/4 left-[35%] text-4xl text-white/60">🎀</div>
+        
+        <!-- 动态气泡 -->
+        <div class="absolute bottom-0 left-1/4 w-3 h-3 rounded-full bg-white/30 bubble" style="animation-delay: 0s; --translateX: -30px;"></div>
+        <div class="absolute bottom-0 left-1/3 w-4 h-4 rounded-full bg-white/40 bubble" style="animation-delay: 2s; --translateX: 20px;"></div>
+        <div class="absolute bottom-0 left-2/3 w-2 h-2 rounded-full bg-white/20 bubble" style="animation-delay: 4s; --translateX: 15px;"></div>
+        <div class="absolute bottom-0 right-1/4 w-3 h-3 rounded-full bg-white/30 bubble" style="animation-delay: 1s; --translateX: 25px;"></div>
+    </div>
+    
+    <!-- 通知系统 -->
+    <div id="notification" class="notification">
+        <div class="notification-icon">
+            <i class="fa fa-birthday-cake"></i>
+        </div>
+        <div class="notification-content">
+            <div class="notification-title">生日快乐已添加！</div>
+            <div class="notification-message">魔法精灵们正在准备倒计时</div>
+        </div>
+        <button class="close-notification">
+            <i class="fa fa-times"></i>
+        </button>
+    </div>
+    
+    <!-- 音乐控制 -->
+    <div class="music-container">
+        <button id="musicToggle" class="music-button">
+            <i class="fa fa-music" aria-hidden="true"></i>
+        </button>
+        
+        <div class="music-controls">
+            <div class="music-info" id="currentTrack">
+                点击播放背景音乐
+            </div>
+            
+            <div class="music-visualizer" id="visualizer">
+                <div class="visualizer-bar"></div>
+                <div class="visualizer-bar"></div>
+                <div class="visualizer-bar"></div>
+                <div class="visualizer-bar"></div>
+                <div class="visualizer-bar"></div>
+                <div class="visualizer-bar"></div>
+                <div class="visualizer-bar"></div>
+                <div class="visualizer-bar"></div>
+                <div class="visualizer-bar"></div>
+                <div class="visualizer-bar"></div>
+                <div class="visualizer-bar"></div>
+                <div class="visualizer-bar"></div>
+            </div>
+            
+            <div class="progress-container" id="progressContainer">
+                <div class="progress-bar" id="progressBar"></div>
+            </div>
+            
+            <div class="control-buttons">
+                <button id="prevTrack" class="control-btn">
+                    <i class="fa fa-step-backward"></i>
+                </button>
+                <button id="playPauseBtn" class="control-btn play-btn">
+                    <i class="fa fa-play"></i>
+                </button>
+                <button id="nextTrack" class="control-btn">
+                    <i class="fa fa-step-forward"></i>
+                </button>
+            </div>
+            
+            <div class="volume-control">
+                <i class="fa fa-volume-up text-gray-500" id="volumeIcon"></i>
+                <input type="range" min="0" max="100" value="80" class="volume-slider" id="volumeSlider">
+            </div>
+        </div>
+    </div>
+    
+    <!-- 颜色选择器 -->
+    <div class="fixed top-4 left-4 z-50 bg-white/80 p-2 rounded-full shadow-lg backdrop-blur-sm flex flex-col items-center gap-2">
+        <span class="text-xs text-gray-600 font-medium">主题颜色</span>
+        <div class="flex gap-1">
+            <button class="w-6 h-6 rounded-full bg-fairyPink color-option hover:scale-110 transition-transform" data-color="fairyPink"></button>
+            <button class="w-6 h-6 rounded-full bg-fairyBlue color-option hover:scale-110 transition-transform" data-color="fairyBlue"></button>
+            <button class="w-6 h-6 rounded-full bg-fairyPurple color-option hover:scale-110 transition-transform" data-color="fairyPurple"></button>
+            <button class="w-6 h-6 rounded-full bg-fairyYellow color-option hover:scale-110 transition-transform" data-color="fairyYellow"></button>
+            <button class="w-6 h-6 rounded-full bg-fairyGreen color-option hover:scale-110 transition-transform" data-color="fairyGreen"></button>
+        </div>
+    </div>
+
+    <div class="container mx-auto px-4 py-12 relative z-10">
+        <!-- 标题区域 -->
+        <header class="text-center mb-10 fade-in">
+            <h1 class="text-[clamp(2.5rem,6vw,4rem)] font-bold text-white text-shadow mb-4 pulse-slow">魔法生日倒计时</h1>
+            <p class="text-[clamp(1.1rem,2.2vw,1.3rem)] text-white text-glow max-w-2xl mx-auto">
+                添加亲友的生日，让精灵们为你倒数重要的日子！所有数据保存在本地，刷新页面不会丢失
+            </p>
+        </header>
+        
+        <!-- 倒计时显示区域 -->
+        <div id="countdownContainer" class="max-w-4xl mx-auto mb-16 fade-in">
+            <div class="text-center mb-8">
+                <h2 id="nearestPerson" class="text-[clamp(1.8rem,4vw,3rem)] font-bold text-white text-shadow mb-2">添加生日开始倒计时</h2>
+                <p id="nearestDate" class="text-xl text-white/90">距离最近的生日还有...</p>
+            </div>
+            
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-5 md:gap-7">
+                <div class="fairy-card p-5 transform transition-all">
+                    <div class="text-center mb-2 text-gray-500">天</div>
+                    <div id="days" class="text-[clamp(3rem,7vw,4.5rem)] font-bold text-center text-gray-700">00</div>
+                </div>
+                <div class="fairy-card p-5 transform transition-all">
+                    <div class="text-center mb-2 text-gray-500">时</div>
+                    <div id="hours" class="text-[clamp(3rem,7vw,4.5rem)] font-bold text-center text-gray-700">00</div>
+                </div>
+                <div class="fairy-card p-5 transform transition-all">
+                    <div class="text-center mb-2 text-gray-500">分</div>
+                    <div id="minutes" class="text-[clamp(3rem,7vw,4.5rem)] font-bold text-center text-gray-700">00</div>
+                </div>
+                <div class="fairy-card p-5 transform transition-all">
+                    <div class="text-center mb-2 text-gray-500">秒</div>
+                    <div id="seconds" class="text-[clamp(3rem,7vw,4.5rem)] font-bold text-center text-gray-700">00</div>
+                </div>
+            </div>
+            
+            <!-- 童话风格装饰元素 -->
+            <div class="mt-12 flex justify-center">
+                <div class="relative">
+                    <div class="text-6xl spin-slow">🎂</div>
+                    <div class="absolute -top-4 -right-4 text-4xl floating">🎉</div>
+                    <div class="absolute -bottom-4 -left-4 text-3xl twinkle">✨</div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 生日列表 -->
+        <div class="max-w-5xl mx-auto fade-in">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-[clamp(1.8rem,4vw,2.5rem)] font-bold text-white text-shadow">所有生日列表</h2>
+                <span class="text-white/80 text-sm">共 <span id="birthdayCount">0</span> 个生日</span>
+            </div>
+            
+            <div id="birthdaysList" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <!-- 生日卡片将由JS动态生成 -->
+                <div class="fairy-card p-6 text-center">
+                    <div class="text-4xl text-fairyPrimary mb-4">
+                        <i class="fa fa-birthday-cake"></i>
+                    </div>
+                    <h3 class="text-xl font-bold text-gray-700 mb-2">添加第一个生日</h3>
+                    <p class="text-gray-600 mb-4">点击右下角的添加按钮开始</p>
+                    <div class="text-3xl text-fairyPrimary floating">
+                        <i class="fa fa-arrow-down"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 页脚 -->
+    <footer class="mt-16 py-6 text-center text-white/70 relative z-10">
+        <p class="text-shadow">✨ 让每一个生日都充满魔法 ✨</p>
+        <p class="mt-2 text-sm">数据保存在您的浏览器本地存储中</p>
+    </footer>
+    
+    <!-- 右下角添加按钮 -->
+    <div class="fixed bottom-6 right-6 z-50">
+        <button id="addButton" class="w-16 h-16 rounded-full fairy-button flex items-center justify-center text-2xl shadow-xl transition-all transform hover:scale-110">
+            <i class="fa fa-plus"></i>
+        </button>
+    </div>
+    
+    <!-- 添加生日表单 -->
+    <div id="addForm" class="add-form">
+        <div class="fairy-card p-6 w-[340px]">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-xl font-bold text-gray-700">添加生日</h3>
+                <button id="closeForm" class="text-gray-500 hover:text-gray-700">
+                    <i class="fa fa-times"></i>
+                </button>
+            </div>
+            
+            <form id="birthdayForm" class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">姓名</label>
+                    <input type="text" id="nameInput" placeholder="例如: 小王子" required 
+                           class="w-full fairy-input focus:ring-2 focus:ring-fairyPrimary">
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">生日日期</label>
+                    <input type="date" id="dateInput" required 
+                           class="w-full fairy-input focus:ring-2 focus:ring-fairyPrimary">
+                </div>
+                
+                <button type="submit" class="w-full fairy-button py-3 px-4 mt-2">
+                    <i class="fa fa-magic mr-2"></i> 添加生日
+                </button>
+            </form>
+        </div>
+    </div>
+    
+    <!-- 背景音乐元素 -->
+    <audio id="backgroundMusic" loop>
+        <!-- 音乐文件会通过JavaScript动态加载 -->
+    </audio>
+
+    <script>
+        // 初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            // 获取DOM元素
+            const addButton = document.getElementById('addButton');
+            const addForm = document.getElementById('addForm');
+            const closeForm = document.getElementById('closeForm');
+            const birthdayForm = document.getElementById('birthdayForm');
+            const nameInput = document.getElementById('nameInput');
+            const dateInput = document.getElementById('dateInput');
+            const birthdaysList = document.getElementById('birthdaysList');
+            const birthdayCount = document.getElementById('birthdayCount');
+            const nearestPerson = document.getElementById('nearestPerson');
+            const nearestDate = document.getElementById('nearestDate');
+            const daysEl = document.getElementById('days');
+            const hoursEl = document.getElementById('hours');
+            const minutesEl = document.getElementById('minutes');
+            const secondsEl = document.getElementById('seconds');
+            const notification = document.getElementById('notification');
+            
+            // 音乐相关元素
+            const musicElement = document.getElementById('backgroundMusic');
+            const musicToggle = document.getElementById('musicToggle');
+            const playPauseBtn = document.getElementById('playPauseBtn');
+            const prevTrackBtn = document.getElementById('prevTrack');
+            const nextTrackBtn = document.getElementById('nextTrack');
+            const volumeSlider = document.getElementById('volumeSlider');
+            const volumeIcon = document.getElementById('volumeIcon');
+            const currentTrackEl = document.getElementById('currentTrack');
+            const visualizerBars = document.querySelectorAll('.visualizer-bar');
+            const progressContainer = document.getElementById('progressContainer');
+            const progressBar = document.getElementById('progressBar');
+            
+            // 音乐状态
+            let isPlaying = false;
+            let currentTrackIndex = 0;
+            let audioContext;
+            let analyser;
+            let dataArray;
+            
+            // 音乐文件列表及对应的显示名称
+            const musicFiles = [
+                { file: 'Andrew Prahlow-Travelersencore.mp3', name: 'Andrew Prahlow' },
+                { file: 'Cable Car - 江语.mp3', name: 'Cable Car' },
+                { file: 'jCoffee - beabadoobee.mp3', name: 'Coffee' },
+                { file: 'gamble(feat. demxntia)-fcj&Alys&demxntia.mp3', name: 'Gamble' },
+                { file: 'MELANCHOLY - White Cherry.mp3', name: 'MELANCHOLY' },
+                { file: 'mj apanay&aren park-time machine (feat. aren park).mp3', name: 'Time Machine' }
+            ];
+            
+            // 生日数据
+            let birthdays = JSON.parse(localStorage.getItem('birthdays')) || [];
+            
+            // 显示/隐藏添加表单
+            addButton.addEventListener('click', function() {
+                addForm.classList.add('visible');
+                nameInput.focus();
+            });
+            
+            closeForm.addEventListener('click', function() {
+                addForm.classList.remove('visible');
+            });
+            
+            // 点击通知关闭按钮
+            notification.querySelector('.close-notification').addEventListener('click', function() {
+                notification.classList.remove('show');
+            });
+            
+            // 显示通知
+            function showNotification(title, message) {
+                notification.querySelector('.notification-title').textContent = title;
+                notification.querySelector('.notification-message').textContent = message;
+                notification.classList.add('show');
+                
+                setTimeout(() => {
+                    notification.classList.remove('show');
+                }, 3000);
+            }
+            
+            // 添加生日
+            birthdayForm.addEventListener('submit', function(e) {
+                e.preventDefault();
+                
+                const name = nameInput.value.trim();
+                const date = dateInput.value;
+                
+                if (name && date) {
+                    // 添加到数组
+                    birthdays.push({
+                        id: Date.now(),
+                        name: name,
+                        date: date
+                    });
+                    
+                    // 保存到localStorage
+                    saveBirthdays();
+                    
+                    // 重新渲染列表
+                    renderBirthdays();
+                    
+                    // 更新倒计时
+                    updateNearestBirthday();
+                    
+                    // 重置表单
+                    nameInput.value = '';
+                    dateInput.value = '';
+                    
+                    // 隐藏表单
+                    addForm.classList.remove('visible');
+                    
+                    // 显示添加成功效果
+                    showConfetti();
+                    
+                    // 显示通知
+                    showNotification('生日添加成功', `${name}的生日已添加到魔法列表！`);
+                }
+            });
+            
+            // 显示彩色纸屑效果
+            function showConfetti() {
+                const confettiContainer = document.createElement('div');
+                confettiContainer.className = 'fixed inset-0 pointer-events-none z-50';
+                document.body.appendChild(confettiContainer);
+                
+                const colors = ['#FF9EB5', '#87CEFA', '#DDA0DD', '#FFFACD', '#98FB98'];
+                const symbols = ['❀', '✨', '🌟', '🎀', '🎈'];
+                
+                for (let i = 0; i < 50; i++) {
+                    const confetti = document.createElement('div');
+                    confetti.className = 'absolute text-xl';
+                    confetti.style.left = Math.random() * 100 + 'vw';
+                    confetti.style.top = '-30px';
+                    confetti.style.opacity = '0';
+                    confetti.innerHTML = symbols[Math.floor(Math.random() * symbols.length)];
+                    confetti.style.color = colors[Math.floor(Math.random() * colors.length)];
+                    confetti.style.fontSize = Math.random() * 20 + 10 + 'px';
+                    confetti.style.zIndex = '1000';
+                    confettiContainer.appendChild(confetti);
+                    
+                    // 动画
+                    setTimeout(() => {
+                        confetti.style.opacity = '1';
+                        confetti.style.transition = `transform ${Math.random() * 2 + 2}s ease-out, opacity ${Math.random() * 1 + 1}s ease-in`;
+                        confetti.style.transform = `translateY(${window.innerHeight + 50}px) 
+                                                  translateX(${Math.random() * 100 - 50}px)
+                                                  rotate(${Math.random() * 360}deg)`;
+                        confetti.style.opacity = '0';
+                    }, 10);
+                }
+                
+                // 清理
+                setTimeout(() => {
+                    document.body.removeChild(confettiContainer);
+                }, 3000);
+            }
+            
+            // 删除生日
+            function deleteBirthday(id) {
+                const birthday = birthdays.find(b => b.id === id);
+                if (birthday) {
+                    birthdays = birthdays.filter(b => b.id !== id);
+                    saveBirthdays();
+                    renderBirthdays();
+                    updateNearestBirthday();
+                    
+                    // 显示通知
+                    showNotification('生日已删除', `${birthday.name}的生日已从列表中移除`);
+                }
+            }
+            
+            // 保存生日到localStorage
+            function saveBirthdays() {
+                localStorage.setItem('birthdays', JSON.stringify(birthdays));
+            }
+            
+            // 渲染生日列表
+            function renderBirthdays() {
+                birthdayCount.textContent = birthdays.length;
+                
+                if (birthdays.length === 0) {
+                    birthdaysList.innerHTML = `
+                        <div class="fairy-card p-6 text-center col-span-full">
+                            <div class="text-4xl text-fairyPrimary mb-4">
+                                <i class="fa fa-birthday-cake"></i>
+                            </div>
+                            <h3 class="text-xl font-bold text-gray-700 mb-2">添加第一个生日</h3>
+                            <p class="text-gray-600 mb-4">点击右下角的添加按钮开始</p>
+                            <div class="text-3xl text-fairyPrimary floating">
+                                <i class="fa fa-arrow-down"></i>
+                            </div>
+                        </div>
+                    `;
+                    return;
+                }
+                
+                // 按日期排序
+                birthdays.sort((a, b) => {
+                    return new Date(a.date) - new Date(b.date);
+                });
+                
+                let html = '';
+                
+                birthdays.forEach(birthday => {
+                    const now = new Date();
+                    const birthDate = new Date(birthday.date);
+                    
+                    // 计算下一个生日日期
+                    let nextBirthday = new Date(now.getFullYear(), birthDate.getMonth(), birthDate.getDate());
+                    if (nextBirthday < now) {
+                        nextBirthday.setFullYear(nextBirthday.getFullYear() + 1);
+                    }
+                    
+                    // 计算天数差
+                    const diffTime = nextBirthday - now;
+                    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+                    
+                    // 计算年龄
+                    let age = now.getFullYear() - birthDate.getFullYear();
+                    const monthDiff = now.getMonth() - birthDate.getMonth();
+                    if (monthDiff < 0 || (monthDiff === 0 && now.getDate() < birthDate.getDate())) {
+                        age--;
+                    }
+                    
+                    // 月份名称
+                    const monthNames = ["一月", "二月", "三月", "四月", "五月", "六月", 
+                                      "七月", "八月", "九月", "十月", "十一月", "十二月"];
+                    
+                    html += `
+                        <div class="fairy-card p-5 relative" data-id="${birthday.id}">
+                            <div class="flex items-center mb-3">
+                                <div class="w-10 h-10 rounded-full bg-fairyPrimary/20 flex items-center justify-center text-fairyPrimary mr-3">
+                                    <i class="fa fa-birthday-cake"></i>
+                                </div>
+                                <div>
+                                    <h3 class="text-lg font-bold text-gray-700">${birthday.name}</h3>
+                                    <p class="text-gray-600 text-sm">${age}岁</p>
+                                </div>
+                            </div>
+                            <p class="text-gray-600 text-sm mb-2">${birthDate.getDate()} ${monthNames[birthDate.getMonth()]}</p>
+                            <div class="flex justify-between items-center mt-4">
+                                <span class="text-gray-700 font-medium">${diffDays === 0 ? '今天' : diffDays + ' 天后'}</span>
+                                <button onclick="deleteBirthday(${birthday.id})" class="text-gray-400 hover:text-red-500 transition-colors">
+                                    <i class="fa fa-trash"></i>
+                                </button>
+                            </div>
+                            
+                            ${diffDays <= 7 ? `
+                                <div class="absolute top-2 right-2 w-3 h-3 rounded-full bg-red-500 animate-pulse"></div>
+                            ` : ''}
+                            
+                            ${diffDays === 0 ? `
+                                <div class="absolute inset-0 bg-yellow-400/10 rounded-xl border-2 border-yellow-400/50"></div>
+                            ` : ''}
+                        </div>
+                    `;
+                });
+                
+                birthdaysList.innerHTML = html;
+            }
+            
+            // 计算最近的生日倒计时
+            function updateNearestBirthday() {
+                if (birthdays.length === 0) {
+                    nearestPerson.textContent = '添加生日开始倒计时';
+                    nearestDate.textContent = '距离最近的生日还有...';
+                    daysEl.textContent = '00';
+                    hoursEl.textContent = '00';
+                    minutesEl.textContent = '00';
+                    secondsEl.textContent = '00';
+                    return;
+                }
+                
+                const now = new Date();
+                let nearest = null;
+                let minDiff = Infinity;
+                
+                // 查找最近的生日
+                birthdays.forEach(birthday => {
+                    const birthDate = new Date(birthday.date);
+                    let nextBirthday = new Date(now.getFullYear(), birthDate.getMonth(), birthDate.getDate());
+                    
+                    if (nextBirthday < now) {
+                        nextBirthday.setFullYear(nextBirthday.getFullYear() + 1);
+                    }
+                    
+                    const diff = nextBirthday - now;
+                    
+                    if (diff < minDiff && diff >= 0) {
+                        minDiff = diff;
+                        nearest = {
+                            name: birthday.name,
+                            date: nextBirthday,
+                            originalDate: birthday.date
+                        };
+                    }
+                });
+                
+                if (nearest) {
+                    nearestPerson.textContent = nearest.name;
+                    
+                    // 月份名称
+                    const monthNames = ["一月", "二月", "三月", "四月", "五月", "六月", 
+                                      "七月", "八月", "九月", "十月", "十一月", "十二月"];
+                    const birthDate = new Date(nearest.originalDate);
+                    
+                    nearestDate.textContent = `生日: ${birthDate.getDate()} ${monthNames[birthDate.getMonth()]}`;
+                    
+                    // 更新倒计时
+                    const diff = nearest.date - now;
+                    const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+                    const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+                    const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+                    const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+                    
+                    daysEl.textContent = days.toString().padStart(2, '0');
+                    hoursEl.textContent = hours.toString().padStart(2, '0');
+                    minutesEl.textContent = minutes.toString().padStart(2, '0');
+                    secondsEl.textContent = seconds.toString().padStart(2, '0');
+                }
+            }
+            
+            // 颜色选择功能
+            const colorOptions = document.querySelectorAll('.color-option');
+            colorOptions.forEach(option => {
+                option.addEventListener('click', function() {
+                    const color = this.getAttribute('data-color');
+                    // 移除所有主题背景类
+                    document.body.classList.remove(
+                        'bg-theme-fairyPink',
+                        'bg-theme-fairyBlue',
+                        'bg-theme-fairyPurple',
+                        'bg-theme-fairyYellow',
+                        'bg-theme-fairyGreen'
+                    );
+                    // 添加新的背景类
+                    document.body.classList.add(`bg-theme-${color}`);
+                    localStorage.setItem('birthdayColor', color);
+                    showNotification('主题已更改', `已切换到${color.replace('fairy', '')}主题`);
+                });
+            });
+            
+            // 音乐功能实现
+            function selectTrack(index) {
+                currentTrackIndex = index;
+                const track = musicFiles[currentTrackIndex];
+                
+                // 使用绝对路径确保正确加载音乐文件
+                musicElement.src = `https://cdn.jsdelivr.net/gh/your-username/birthday-countdown@main/Music/${track.file}`;
+                currentTrackEl.textContent = track.name;
+                
+                if (isPlaying) {
+                    musicElement.play().catch(e => {
+                        console.log('自动播放被浏览器阻止，请手动点击播放按钮');
+                    });
+                }
+            }
+            
+            function playPause() {
+                if (isPlaying) {
+                    musicElement.pause();
+                    playPauseBtn.innerHTML = '<i class="fa fa-play"></i>';
+                    musicToggle.innerHTML = '<i class="fa fa-music" aria-hidden="true"></i>';
+                } else {
+                    if (!musicElement.src) {
+                        selectTrack(0);
+                    }
+                    musicElement.play().catch(e => {
+                        console.log('自动播放被浏览器阻止，请手动点击播放按钮');
+                    });
+                    playPauseBtn.innerHTML = '<i class="fa fa-pause"></i>';
+                    musicToggle.innerHTML = '<i class="fa fa-pause" aria-hidden="true"></i>';
+                }
+                isPlaying = !isPlaying;
+            }
+            
+            function nextTrack() {
+                let nextIndex = currentTrackIndex + 1;
+                if (nextIndex >= musicFiles.length) {
+                    nextIndex = 0;
+                }
+                selectTrack(nextIndex);
+            }
+            
+            function prevTrack() {
+                let prevIndex = currentTrackIndex - 1;
+                if (prevIndex < 0) {
+                    prevIndex = musicFiles.length - 1;
+                }
+                selectTrack(prevIndex);
+            }
+            
+            function updateVolume() {
+                const volume = volumeSlider.value / 100;
+                musicElement.volume = volume;
+                
+                // 更新音量图标
+                if (volume === 0) {
+                    volumeIcon.className = 'fa fa-volume-off text-gray-500';
+                } else if (volume < 0.5) {
+                    volumeIcon.className = 'fa fa-volume-down text-gray-500';
+                } else {
+                    volumeIcon.className = 'fa fa-volume-up text-gray-500';
+                }
+            }
+            
+            // 进度条控制
+            function updateProgress(e) {
+                const width = this.clientWidth;
+                const clickX = e.offsetX;
+                const duration = musicElement.duration;
+                
+                musicElement.currentTime = (clickX / width) * duration;
+            }
+            
+            // 更新进度条显示
+            function updateProgressBar() {
+                const { currentTime, duration } = musicElement;
+                const progressPercent = (currentTime / duration) * 100;
+                progressBar.style.width = `${progressPercent}%`;
+            }
+            
+            // 音乐可视化效果
+            function initAudioAnalyser() {
+                audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                analyser = audioContext.createAnalyser();
+                const source = audioContext.createMediaElementSource(musicElement);
+                
+                source.connect(analyser);
+                analyser.connect(audioContext.destination);
+                
+                analyser.fftSize = 256;
+                const bufferLength = analyser.frequencyBinCount;
+                dataArray = new Uint8Array(bufferLength);
+                
+                function updateVisualizer() {
+                    if (!isPlaying) return;
+                    
+                    analyser.getByteFrequencyData(dataArray);
+                    
+                    visualizerBars.forEach((bar, i) => {
+                        const value = dataArray[i % bufferLength];
+                        const height = Math.max(5, value / 255 * 30);
+                        bar.style.height = `${height}px`;
+                    });
+                    
+                    requestAnimationFrame(updateVisualizer);
+                }
+                
+                updateVisualizer();
+            }
+            
+            // 音乐事件监听
+            musicToggle.addEventListener('click', playPause);
+            playPauseBtn.addEventListener('click', playPause);
+            nextTrackBtn.addEventListener('click', nextTrack);
+            prevTrackBtn.addEventListener('click', prevTrack);
+            volumeSlider.addEventListener('input', updateVolume);
+            progressContainer.addEventListener('click', updateProgress);
+            
+            // 音乐结束时自动播放下一首
+            musicElement.addEventListener('ended', nextTrack);
+            
+            // 音乐时间更新
+            musicElement.addEventListener('timeupdate', updateProgressBar);
+            
+            // 初始化音频分析器
+            musicElement.addEventListener('play', function() {
+                if (!audioContext) {
+                    initAudioAnalyser();
+                }
+            });
+            
+            // 初始化音量
+            updateVolume();
+            
+            // 全局删除函数
+            window.deleteBirthday = deleteBirthday;
+            
+            // 初始渲染
+            renderBirthdays();
+            updateNearestBirthday();
+            
+            // 每秒更新倒计时
+            setInterval(updateNearestBirthday, 1000);
+            
+            // 添加气泡动画
+            document.querySelectorAll('.bubble').forEach(bubble => {
+                const duration = Math.random() * 10 + 10;
+                bubble.style.animation = `floatUp ${duration}s linear infinite`;
+            });
+            
+            // 页面加载时恢复之前的设置
+            window.addEventListener('load', function() {
+                // 恢复颜色设置
+                const savedColor = localStorage.getItem('birthdayColor');
+                if (savedColor) {
+                    // 移除所有主题背景类
+                    document.body.classList.remove(
+                        'bg-theme-fairyPink',
+                        'bg-theme-fairyBlue',
+                        'bg-theme-fairyPurple',
+                        'bg-theme-fairyYellow',
+                        'bg-theme-fairyGreen'
+                    );
+                    // 添加保存的主题背景类
+                    document.body.classList.add(`bg-theme-${savedColor}`);
+                }
+            });
+        });
+    </script>
+</body>
+</html>
