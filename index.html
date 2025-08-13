@@ -83,6 +83,9 @@
             .number-pulse {
                 animation: numberPulse 1s ease-out;
             }
+            .slide-out {
+                animation: slideOut 0.3s ease forwards;
+            }
         }
         
         @keyframes floating {
@@ -114,6 +117,11 @@
         @keyframes slideIn {
             from { opacity: 0; transform: translateX(-30px); }
             to { opacity: 1; transform: translateX(0); }
+        }
+        
+        @keyframes slideOut {
+            from { opacity: 1; transform: translateX(0); }
+            to { opacity: 0; transform: translateX(30px); }
         }
         
         @keyframes gradientShift {
@@ -605,7 +613,7 @@
         <header class="text-center mb-10 fade-in">
             <h1 class="text-[clamp(2.5rem,6vw,4rem)] font-bold text-white text-shadow mb-4 pulse-slow gradient-animate bg-clip-text text-transparent bg-gradient-to-r from-white to-pink-100">魔法生日倒计时</h1>
             <p class="text-[clamp(1.1rem,2.2vw,1.3rem)] text-white text-glow max-w-2xl mx-auto slide-in" style="animation-delay: 0.3s">
-                添加亲友的生日，让精灵们为你倒数重要的日子！所有数据保存在本地，刷新页面不会丢失
+                添加亲友的生日，为你倒数重要的日子！所有数据保存在本地，刷新页面不会丢失
             </p>
         </header>
         
@@ -632,13 +640,6 @@
                 <div class="fairy-card p-5 transform transition-all hover-lift" style="animation-delay: 0.3s">
                     <div class="text-center mb-2 text-gray-500">秒</div>
                     <div id="seconds" class="text-[clamp(3rem,7vw,4.5rem)] font-bold text-center text-gray-700">00</div>
-                </div>
-            </div>
-            
-            <!-- 生日蛋糕装饰 -->
-            <div class="mt-12 flex justify-center">
-                <div class="relative">
-                    <div class="text-6xl spin-slow">🎂</div>
                 </div>
             </div>
         </div>
@@ -668,7 +669,7 @@
     
     <!-- 页脚 -->
     <footer class="mt-16 py-6 text-center text-white/70 relative z-10 fade-in" style="animation-delay: 0.9s">
-        <p class="text-shadow">✨ 让每一个生日都充满魔法 ✨</p>
+        <p class="text-shadow">让每一个生日都值得期待</p>
         <p class="mt-2 text-sm">数据保存在您的浏览器本地存储中</p>
     </footer>
     
@@ -758,7 +759,7 @@
             let dataArray;
             let animationId;
             
-            // 音乐文件列表及对应的显示名称 - 修正路径指向Music文件夹
+            // 音乐文件列表
             const musicFiles = [
                 { file: 'Music/1.mp3', name: 'Andrew Prahlow - Travelersencore' },
                 { file: 'Music/2.mp3', name: '江语 - Cable Car' },
@@ -778,7 +779,6 @@
             addButton.addEventListener('click', function() {
                 addForm.classList.add('visible');
                 nameInput.focus();
-                // 添加表单弹出动画
                 addForm.classList.add('hover-lift');
             });
             
@@ -837,7 +837,7 @@
                     showConfetti();
                     
                     // 显示通知
-                    showNotification('生日添加成功', `${name}的生日已添加到魔法列表！`);
+                    showNotification('生日添加成功', `${name}的生日已添加到列表！`);
                 }
             });
             
@@ -879,16 +879,14 @@
                 }, 3000);
             }
             
-            // 删除生日
-            function deleteBirthday(id) {
+            // 删除生日 - 修复核心：使用箭头函数绑定正确的this上下文
+            const deleteBirthday = (id) => {
                 const birthday = birthdays.find(b => b.id === id);
                 if (birthday) {
                     // 添加删除动画
                     const card = document.querySelector(`.fairy-card[data-id="${id}"]`);
                     if (card) {
-                        card.style.transform = 'scale(0.8)';
-                        card.style.opacity = '0';
-                        card.style.transition = 'all 0.3s ease';
+                        card.classList.add('slide-out');
                         
                         setTimeout(() => {
                             birthdays = birthdays.filter(b => b.id !== id);
@@ -901,7 +899,10 @@
                         }, 300);
                     }
                 }
-            }
+            };
+            
+            // 将删除函数绑定到window对象，确保全局可访问
+            window.deleteBirthday = deleteBirthday;
             
             // 保存生日到localStorage
             function saveBirthdays() {
@@ -970,8 +971,8 @@
                                     <h3 class="font-bold text-gray-800">${birthday.name}</h3>
                                     <p class="text-sm text-gray-500">${monthNames[birthDate.getMonth()]} ${birthDate.getDate()}日</p>
                                 </div>
-                                <button class="ml-auto text-gray-400 hover:text-red-500 transition-colors" 
-                                        onclick="deleteBirthday(${birthday.id})">
+                                <button class="ml-auto text-gray-400 hover:text-red-500 transition-colors delete-btn" 
+                                        data-id="${birthday.id}">
                                     <i class="fa fa-trash"></i>
                                 </button>
                             </div>
@@ -990,6 +991,14 @@
                 });
                 
                 birthdaysList.innerHTML = html;
+                
+                // 为删除按钮添加事件监听器 - 修复核心：使用事件委托
+                document.querySelectorAll('.delete-btn').forEach(btn => {
+                    btn.addEventListener('click', function() {
+                        const id = parseInt(this.getAttribute('data-id'));
+                        deleteBirthday(id);
+                    });
+                });
                 
                 // 为新添加的卡片添加动画
                 document.querySelectorAll('#birthdaysList .fairy-card').forEach((card, index) => {
@@ -1119,6 +1128,11 @@
             }
             
             function playMusic() {
+                // 确保音频上下文已初始化
+                if (audioContext && audioContext.state === 'suspended') {
+                    audioContext.resume();
+                }
+                
                 musicElement.play()
                     .then(() => {
                         isPlaying = true;
@@ -1181,6 +1195,7 @@
             
             function updateProgress() {
                 const { duration, currentTime } = musicElement;
+                if (isNaN(duration)) return; // 防止未加载完成时出错
                 const progressPercent = (currentTime / duration) * 100;
                 progressBar.style.width = `${progressPercent}%`;
             }
@@ -1189,7 +1204,9 @@
                 const width = progressContainer.clientWidth;
                 const clickX = e.offsetX;
                 const duration = musicElement.duration;
-                musicElement.currentTime = (clickX / width) * duration;
+                if (!isNaN(duration)) {
+                    musicElement.currentTime = (clickX / width) * duration;
+                }
             }
             
             function initAudioVisualizer() {
@@ -1299,11 +1316,6 @@
             }
         `;
         document.head.appendChild(style);
-        
-        // 全局函数用于删除生日
-        function deleteBirthday(id) {
-            // 由事件监听器实现
-        }
     </script>
 </body>
 </html>
