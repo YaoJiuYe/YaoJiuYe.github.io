@@ -1,340 +1,1745 @@
-<html lang="zh-CN"><head>
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>魔法生日倒计时</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
-    <script src="tailwind.config.js"></script>
-    <link rel="stylesheet" href="styles.css">
-</head>
-<body class="min-h-screen font-fairy transition-colors duration-700 bg-theme-fairyPink relative overflow-x-hidden">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        fairyPink: '#FF6B8B',
+                        fairyBlue: '#6BBEF5',
+                        fairyPurple: '#B794F4',
+                        fairyGreen: '#6BCB77',
+                        fairyYellow: '#FFD93D',
+                        fairyOrange: '#FF9F43',
+                        fairyTeal: '#4DD0E1',
+                    },
+                    fontFamily: {
+                        fairy: ['Comic Sans MS', 'Marker Felt', 'sans-serif'],
+                    },
+                }
+            }
+        }
+    </script>
+    <style type="text/tailwindcss">
+        @layer utilities {
+            .content-auto {
+                content-visibility: auto;
+            }
+            .fairy-shadow {
+                box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1), 0 8px 25px rgba(0, 0, 0, 0.05);
+            }
+            .fairy-border {
+                border: 2px dashed white;
+            }
+            .text-shadow-fairy {
+                text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.2);
+            }
+            .hover-pop {
+                transition: transform 0.3s ease, box-shadow 0.3s ease;
+            }
+            .hover-pop:hover {
+                transform: translateY(-5px) scale(1.02);
+                box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+            }
+            .animate-float {
+                animation: float 6s ease-in-out infinite;
+            }
+            @keyframes float {
+                0% { transform: translateY(0px); }
+                50% { transform: translateY(-10px); }
+                100% { transform: translateY(0px); }
+            }
+            .animate-pulse-slow {
+                animation: pulse 4s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+            }
+            .countdown-glow {
+                text-shadow: 0 0 8px rgba(255, 255, 255, 0.8);
+            }
+        }
+    </style>
+    <style>
+        /* 童话风格的滚动条 */
+        ::-webkit-scrollbar {
+            width: 10px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f9f4f8;
+            border-radius: 10px;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: linear-gradient(180deg, #FF6B8B, #B794F4);
+            border-radius: 10px;
+            border: 2px solid #f9f4f8;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: linear-gradient(180deg, #ff527a, #a376e0);
+        }
 
-    <!-- 圆形导航菜单 -->
-    <div class="circle-nav">
-      <div class="nav-toggle" id="navToggle">
-          <i class="fa fa-home"></i>
-      </div>
-      <div class="nav-items" id="navItems">
-           <div class="nav-item" id="homeNav">
-             <i class="fa fa-home"></i>
-             <span class="nav-item-tooltip ml-2">主页</span>
-          </div>
-          <div class="nav-item" id="birthdayNav">
-             <i class="fa fa-birthday-cake"></i>
-              <span class="nav-item-tooltip ml-2">生日倒计时</span>
-          </div>
-         <div class="nav-item" id="galleryNav">
-            <i class="fa fa-university"></i>
-             <span class="nav-item-tooltip ml-2">展馆</span>
-            </div>
-        </div>
-    </div>
-    
-    <!-- 动态粒子背景 -->
-    <div id="particles-container" class="fixed inset-0 pointer-events-none z-0"></div>
-    
-    <!-- 通知系统 -->
-    <div id="notification" class="notification">
-        <div class="notification-icon">
-            <i class="fa fa-birthday-cake"></i>
-        </div>
-        <div class="notification-content">
-            <div class="notification-title">生日快乐已添加！</div>
-            <div class="notification-message">魔法精灵们正在准备倒计时</div>
-        </div>
-        <button class="close-notification">
-            <i class="fa fa-times"></i>
-        </button>
-    </div>
-    
-    <!-- 音乐控制 -->
-    <div class="music-container">
-        <button id="musicToggle" class="music-button">
-            <i class="fa fa-music" aria-hidden="true"></i>
-        </button>
-        
-        <div class="music-controls">
-            <div class="music-info" id="currentTrack">
-                点击播放背景音乐
+        /* 页面过渡动画 */
+        .page {
+            display: none;
+            opacity: 0;
+            transform: translateY(20px);
+            transition: opacity 0.5s ease, transform 0.5s ease;
+        }
+        .page.active {
+            display: block;
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        /* 音乐播放器样式增强 */
+        .music-player {
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 30px;
+            transition: all 0.3s ease;
+        }
+        .music-player:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+        }
+        .music-progress {
+            height: 6px;
+            border-radius: 3px;
+            background: #f0f0f0;
+            overflow: hidden;
+            cursor: pointer;
+        }
+        .music-progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #FF6B8B, #B794F4);
+            transition: width 0.1s linear;
+        }
+        .music-button {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s ease;
+        }
+        .music-button:hover {
+            transform: scale(1.1);
+            background: rgba(255, 107, 139, 0.1);
+        }
+        .music-track-info {
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        /* 生日卡片样式 - 童话风格 */
+        .birthday-card {
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            overflow: hidden;
+            position: relative;
+        }
+        .birthday-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 5px;
+            transition: height 0.3s ease;
+        }
+        .birthday-card:hover::before {
+            height: 8px;
+        }
+        .birthday-card::after {
+            content: '';
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            width: 30px;
+            height: 30px;
+            background-size: contain;
+            background-repeat: no-repeat;
+            opacity: 0.5;
+            transition: all 0.3s ease;
+        }
+        .birthday-card:hover::after {
+            transform: rotate(10deg) scale(1.1);
+            opacity: 0.8;
+        }
+
+        /* 不同颜色主题的卡片装饰 */
+        .theme-pink {
+            border-top: 4px solid #FF6B8B;
+        }
+        .theme-pink::before {
+            background: #FF6B8B;
+        }
+        .theme-pink::after {
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23FF6B8B'%3E%3Cpath d='M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z'/%3E%3C/svg%3E");
+        }
+
+        .theme-blue {
+            border-top: 4px solid #6BBEF5;
+        }
+        .theme-blue::before {
+            background: #6BBEF5;
+        }
+        .theme-blue::after {
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%236BBEF5'%3E%3Cpath d='M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z'/%3E%3C/svg%3E");
+        }
+
+        .theme-purple {
+            border-top: 4px solid #B794F4;
+        }
+        .theme-purple::before {
+            background: #B794F4;
+        }
+        .theme-purple::after {
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23B794F4'%3E%3Cpath d='M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm-5-9h10v2H7z'/%3E%3C/svg%3E");
+        }
+
+        .theme-green {
+            border-top: 4px solid #6BCB77;
+        }
+        .theme-green::before {
+            background: #6BCB77;
+        }
+        .theme-green::after {
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%236BCB77'%3E%3Cpath d='M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z'/%3E%3C/svg%3E");
+        }
+
+        .theme-yellow {
+            border-top: 4px solid #FFD93D;
+        }
+        .theme-yellow::before {
+            background: #FFD93D;
+        }
+        .theme-yellow::after {
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23FFD93D'%3E%3Cpath d='M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z'/%3E%3C/svg%3E");
+        }
+
+        .theme-orange {
+            border-top: 4px solid #FF9F43;
+        }
+        .theme-orange::before {
+            background: #FF9F43;
+        }
+        .theme-orange::after {
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23FF9F43'%3E%3Cpath d='M12 22c1.1 0 2-.9 2-2h-4c0 1.1.9 2 2 2zm6-6v-5c0-3.07-1.63-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v.68C7.64 5.36 6 7.92 6 11v5H5v2h14v-2h-1zm-2 1H8v-6c0-2.48 1.51-4.5 4-4.5s4 2.02 4 4.5v6z'/%3E%3C/svg%3E");
+        }
+
+        .theme-teal {
+            border-top: 4px solid #4DD0E1;
+        }
+        .theme-teal::before {
+            background: #4DD0E1;
+        }
+        .theme-teal::after {
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%234DD0E1'%3E%3Cpath d='M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z'/%3E%3C/svg%3E");
+        }
+
+        /* 即将到来的生日样式 */
+        .upcoming-birthday {
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.95), rgba(255, 255, 255, 0.85));
+            backdrop-filter: blur(10px);
+            border-radius: 16px;
+            overflow: hidden;
+            transition: all 0.5s ease;
+        }
+        .upcoming-birthday:hover {
+            transform: translateY(-5px);
+        }
+        .upcoming-header {
+            position: relative;
+            overflow: hidden;
+        }
+        .upcoming-header::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(135deg, rgba(0,0,0,0.1), rgba(0,0,0,0.2));
+        }
+        .upcoming-avatar {
+            width: 90px;
+            height: 90px;
+            border: 4px solid white;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            transition: transform 0.5s ease;
+        }
+        .upcoming-birthday:hover .upcoming-avatar {
+            transform: scale(1.05) rotate(3deg);
+        }
+        .countdown-box-upcoming {
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 10px;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+            transition: all 0.3s ease;
+        }
+        .countdown-box-upcoming:hover {
+            transform: scale(1.05);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.15);
+        }
+
+        /* 粒子背景 */
+        .particle {
+            position: absolute;
+            border-radius: 50%;
+            pointer-events: none;
+            opacity: 0.5;
+            animation: float 8s infinite ease-in-out;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0) rotate(0deg); }
+            50% { transform: translateY(-20px) rotate(10deg); }
+        }
+
+        /* 头像上传区域样式 */
+        .avatar-upload-container {
+            transition: all 0.3s ease;
+        }
+        .avatar-upload-container:hover {
+            transform: scale(1.02);
+        }
+        .avatar-preview {
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+        .avatar-preview:hover::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+        }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-pink-50 via-purple-50 to-blue-50 font-fairy text-gray-800 min-h-screen">
+    <!-- 粒子背景 -->
+    <div id="particles-container" class="fixed inset-0 z-0"></div>
+
+    <!-- 导航栏 -->
+    <nav class="fixed top-0 left-0 right-0 z-50 bg-white/80 backdrop-blur-md shadow-sm transition-all duration-300">
+        <div class="max-w-6xl mx-auto px-4 py-3 flex justify-between items-center">
+            <div class="flex items-center">
+                <button id="navToggle" class="p-2 rounded-full hover:bg-pink-50 transition-colors">
+                    <i class="fa fa-magic text-fairyPink text-xl"></i>
+                </button>
+                <h1 class="ml-3 text-xl font-bold bg-gradient-to-r from-fairyPink to-fairyPurple bg-clip-text text-transparent">魔法时光</h1>
             </div>
             
-            <div class="music-visualizer" id="visualizer">
-                <div class="visualizer-bar"></div>
-                <div class="visualizer-bar"></div>
-                <div class="visualizer-bar"></div>
-                <div class="visualizer-bar"></div>
-                <div class="visualizer-bar"></div>
-                <div class="visualizer-bar"></div>
-                <div class="visualizer-bar"></div>
-                <div class="visualizer-bar"></div>
-                <div class="visualizer-bar"></div>
-                <div class="visualizer-bar"></div>
-                <div class="visualizer-bar"></div>
-                <div class="visualizer-bar"></div>
-            </div>
-            
-            <div class="progress-container" id="progressContainer">
-                <div class="progress-bar" id="progressBar"></div>
-            </div>
-            
-            <div class="control-buttons">
-                <button id="prevTrack" class="control-btn">
+            <!-- 音乐播放器 -->
+            <div class="music-player flex items-center px-4 py-2 hidden md:flex">
+                <button class="music-button text-fairyPink" id="prevTrack">
                     <i class="fa fa-step-backward"></i>
                 </button>
-                <button id="playPauseBtn" class="control-btn play-btn">
+                <button class="music-button text-fairyPink mx-1" id="playPauseBtn">
                     <i class="fa fa-play"></i>
                 </button>
-                <button id="nextTrack" class="control-btn">
+                <button class="music-button text-fairyPink" id="nextTrack">
                     <i class="fa fa-step-forward"></i>
                 </button>
-            </div>
-            
-            <div class="volume-control">
-                <i class="fa fa-volume-up text-gray-500" id="volumeIcon"></i>
-                <input type="range" min="0" max="100" value="80" class="volume-slider" id="volumeSlider">
-            </div>
-        </div>
-    </div>
-    
-    <!-- 个人资料展示区域 -->
-    <div class="profile-section" id="profileSection">
-        <div class="close-profile" id="closeProfile">
-            <i class="fa fa-times"></i>
-        </div>
-        <div class="profile-content">
-            <div class="w-32 h-32 rounded-full bg-gradient-to-r from-fairyPrimary to-fairySecondary mx-auto mb-6 flex items-center justify-center overflow-hidden">
-                <i class="fa fa-user text-white text-6xl"></i>
-            </div>
-            <h2 class="text-4xl font-bold text-gray-700 mb-2">我的小天地</h2>
-            <p class="text-gray-600 mb-6 max-w-lg mx-auto">这是一个记录生活点滴、珍藏美好回忆的小空间，专门用来记录和倒计时亲友们的生日。</p>
-            
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
-                <div class="fairy-card p-4">
-                    <div class="text-3xl text-fairyPrimary mb-2"><i class="fa fa-calendar"></i></div>
-                    <h3 class="font-bold text-gray-700 mb-1">记录的生日</h3>
-                    <p class="text-2xl font-bold text-gray-600" id="profileBirthdayCount">0</p>
+                
+                <div class="mx-3 flex-1 min-w-[120px] max-w-[200px]">
+                    <div class="music-track-info text-sm text-gray-700" id="currentTrack">等待播放...</div>
+                    <div class="music-progress mt-1">
+                        <div class="music-progress-fill" id="progressBar" style="width: 0%"></div>
+                    </div>
                 </div>
-                <div class="fairy-card p-4">
-                    <div class="text-3xl text-fairyPrimary mb-2"><i class="fa fa-star"></i></div>
-                    <h3 class="font-bold text-gray-700 mb-1">本月生日</h3>
-                    <p class="text-2xl font-bold text-gray-600" id="profileThisMonth">0</p>
-                </div>
-                <div class="fairy-card p-4">
-                    <div class="text-3xl text-fairyPrimary mb-2"><i class="fa fa-heart"></i></div>
-                    <h3 class="font-bold text-gray-700 mb-1">即将到来</h3>
-                    <p class="text-2xl font-bold text-gray-600" id="profileUpcoming">0</p>
+                
+                <div class="flex items-center">
+                    <i class="fa fa-volume-up text-gray-600 mr-2"></i>
+                    <input type="range" id="volumeSlider" min="0" max="100" value="70" class="w-20 accent-fairyPink">
                 </div>
             </div>
-            
-            <p class="text-gray-500 text-sm">最后更新: <span id="lastUpdated">刚刚</span></p>
         </div>
-    </div>
-    
-    <!-- 主页内容 -->
-    <div id="homePage" class="page active">
-        <div class="container mx-auto px-4 py-12 relative z-10">
-            <header class="text-center mb-16 fade-in">
-                <h1 class="text-[clamp(2.5rem,6vw,4rem)] font-bold text-white text-shadow mb-4 pulse-slow gradient-animate bg-clip-text text-transparent bg-gradient-to-r from-white to-pink-100">魔法时光</h1>
-                <p class="text-[clamp(1.1rem,2.2vw,1.3rem)] text-white text-glow max-w-2xl mx-auto slide-in" style="animation-delay: 0.3s">
-                    记录生活中的每一个特别时刻，不错过任何值得庆祝的日子
+        
+        <!-- 导航菜单 -->
+        <div id="navItems" class="hidden absolute top-full left-0 right-0 bg-white shadow-lg py-4 px-6 flex flex-col md:hidden">
+            <button id="homeNav" class="nav-item text-left py-3 px-4 hover:bg-pink-50 rounded-lg transition-colors">
+                <i class="fa fa-home mr-2 text-fairyPink"></i> 首页
+            </button>
+            <button id="birthdayNav" class="nav-item text-left py-3 px-4 hover:bg-pink-50 rounded-lg transition-colors">
+                <i class="fa fa-birthday-cake mr-2 text-fairyPink"></i> 生日倒计时
+            </button>
+            <button id="galleryNav" class="nav-item text-left py-3 px-4 hover:bg-pink-50 rounded-lg transition-colors">
+                <i class="fa fa-university mr-2 text-fairyPink"></i> 生日展馆
+            </button>
+            <div class="mt-2 pt-2 border-t border-gray-100">
+                <div class="flex items-center px-4">
+                    <button class="music-button text-fairyPink" id="mobilePlayPauseBtn">
+                        <i class="fa fa-play"></i>
+                    </button>
+                    <input type="range" id="mobileVolumeSlider" min="0" max="100" value="70" class="w-24 ml-2 accent-fairyPink">
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- 主页 -->
+    <div id="homePage" class="page min-h-screen pt-20 pb-16 px-4 relative z-10 active">
+        <div class="max-w-6xl mx-auto">
+            <div class="text-center mb-16 pt-10">
+                <h1 class="text-[clamp(2rem,5vw,3.5rem)] font-bold mb-6 text-shadow-fairy">
+                    记录每一个特别的<span class="bg-gradient-to-r from-fairyPink to-fairyPurple bg-clip-text text-transparent">生日</span>时刻
+                </h1>
+                <p class="text-gray-600 max-w-2xl mx-auto text-lg mb-8">
+                    用魔法保存珍贵的生日记忆，再也不会忘记重要的日子
                 </p>
-            </header>
-            
-<div class="home-features">
-    <!-- 生日倒计时功能卡片 -->
-    <div class="feature-card hover-lift fade-in" style="animation-delay: 0.5s">
-        <div class="feature-icon bg-gradient-to-r from-fairyPrimary to-fairySecondary">
-            <i class="fa fa-birthday-cake"></i>
-        </div>
-        <h3 class="feature-title">生日倒计时</h3>
-        <p class="feature-description">记录亲友的生日，获取精确倒计时，不错过每一个祝福时刻</p>
-        <button class="fairy-button px-6 py-2" id="goToBirthdayBtn">
-            开始使用 <i class="fa fa-arrow-right ml-2"></i>
-        </button>
-    </div>
-    
-    <!-- 展馆功能卡片 -->
-    <div class="feature-card hover-lift fade-in" style="animation-delay: 0.7s">
-        <div class="feature-icon bg-gradient-to-r from-fairyGreen to-fairyBlue">
-            <i class="fa fa-university"></i>
-        </div>
-        <h3 class="feature-title">时光展馆</h3>
-        <p class="feature-description">展示您记录的所有重要时刻，珍藏美好回忆</p>
-        <button class="fairy-button px-6 py-2" id="goToGalleryBtn">
-            进入展馆 <i class="fa fa-arrow-right ml-2"></i>
-        </button>
-    </div>
-</div>
-            
-            <div class="text-center mt-16 fade-in" style="animation-delay: 1.3s">
-                <h2 class="text-[clamp(1.8rem,4vw,2.5rem)] font-bold text-white text-shadow mb-6">记录美好，珍藏回忆</h2>
-                <p class="text-white/80 max-w-2xl mx-auto mb-8">
-                    无论是生日、纪念日还是其他重要时刻，都值得被精心记录和期待。
-                    让我们一起，不错过生活中的每一个精彩瞬间。
-                </p>
-                <button class="fairy-button px-8 py-3 text-lg hover-lift ripple" id="startJourneyBtn">
-                    <i class="fa fa-magic mr-2"></i> 开始我的时光之旅
+                <button id="mainStartBtn" class="bg-gradient-to-r from-fairyPink to-fairyPurple text-white font-bold py-3 px-8 rounded-full shadow-lg hover-pop ripple">
+                    开始使用 <i class="fa fa-magic ml-2"></i>
                 </button>
             </div>
-        </div>
-        
-        <!-- 页脚 -->
-        <footer class="mt-16 py-6 text-center text-white/70 relative z-10 fade-in" style="animation-delay: 1.5s">
-            <p class="text-shadow">魔法时光 - 珍藏生活中的每一刻</p>
-            <p class="mt-2 text-sm">所有数据安全存储在您的设备上</p>
-        </footer>
-    </div>
-    
-    <!-- 生日倒计时页面 -->
-    <div id="birthdayPage" class="page">
-        <div class="container mx-auto px-4 py-12 relative z-10">
-            <!-- 标题区域 -->
-            <header class="text-center mb-10 fade-in">
-                <h1 class="text-[clamp(2.5rem,6vw,4rem)] font-bold text-white text-shadow mb-4 pulse-slow gradient-animate bg-clip-text text-transparent bg-gradient-to-r from-white to-pink-100">魔法生日倒计时</h1>
-                <p class="text-[clamp(1.1rem,2.2vw,1.3rem)] text-white text-glow max-w-2xl mx-auto slide-in" style="animation-delay: 0.3s">
-                    添加亲友的生日，为你倒数重要的日子！所有数据保存在本地，刷新页面不会丢失
-                </p>
-            </header>
-            
-            <!-- 倒计时显示区域 -->
-            <div id="countdownContainer" class="max-w-4xl mx-auto mb-16 fade-in" style="animation-delay: 0.5s">
-                <div class="text-center mb-8">
-                    <h2 id="nearestPerson" class="text-[clamp(1.8rem,4vw,3rem)] font-bold text-white text-shadow mb-2">添加生日开始倒计时</h2>
-                    <p id="nearestDate" class="text-xl text-white/90">距离最近的生日还有...</p>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8 mb-16">
+                <div class="bg-white rounded-2xl p-6 fairy-shadow hover-pop">
+                    <div class="w-16 h-16 rounded-full bg-gradient-to-r from-fairyPink to-fairyPurple flex items-center justify-center mx-auto mb-4">
+                        <i class="fa fa-clock-o text-white text-2xl"></i>
+                    </div>
+                    <h3 class="text-xl font-bold mt-2 mb-3 text-center">倒计时提醒</h3>
+                    <p class="text-gray-600 text-center mb-6">
+                        精确计算每个生日的倒计时，提前做好准备，不错过任何惊喜时刻。
+                    </p>
+                    <button id="goToBirthdayBtn" class="bg-gradient-to-r from-fairyPink to-fairyPurple text-white font-bold py-3 px-6 rounded-full w-full hover-pop">
+                        查看倒计时 <i class="fa fa-arrow-right ml-2"></i>
+                    </button>
                 </div>
-                
-                <div class="grid grid-cols-2 md:grid-cols-4 gap-5 md:gap-7">
-                    <div class="fairy-card p-5 transform transition-all hover-lift">
-                        <div class="text-center mb-2 text-gray-500">天</div>
-                        <div id="days" class="text-[clamp(3rem,7vw,4.5rem)] font-bold text-center text-gray-700">00</div>
+
+                <div class="bg-white rounded-2xl p-6 fairy-shadow hover-pop">
+                    <div class="w-16 h-16 rounded-full bg-gradient-to-r from-fairyBlue to-fairyTeal flex items-center justify-center mx-auto mb-4">
+                        <i class="fa fa-heart text-white text-2xl"></i>
                     </div>
-                    <div class="fairy-card p-5 transform transition-all hover-lift" style="animation-delay: 0.1s">
-                        <div class="text-center mb-2 text-gray-500">时</div>
-                        <div id="hours" class="text-[clamp(3rem,7vw,4.5rem)] font-bold text-center text-gray-700">00</div>
+                    <h3 class="text-xl font-bold mt-2 mb-3 text-center">珍贵回忆</h3>
+                    <p class="text-gray-600 text-center mb-6">
+                        记录每一个特别的生日瞬间，添加照片和笔记，珍藏美好回忆。
+                    </p>
+                    <button id="startJourneyBtn" class="bg-gradient-to-r from-fairyBlue to-fairyTeal text-white font-bold py-3 px-6 rounded-full w-full hover-pop">
+                        开始记录 <i class="fa fa-star ml-2"></i>
+                    </button>
+                </div>
+
+                <div class="bg-white rounded-2xl p-6 fairy-shadow hover-pop">
+                    <div class="w-16 h-16 rounded-full bg-gradient-to-r from-fairyGreen to-fairyYellow flex items-center justify-center mx-auto mb-4">
+                        <i class="fa fa-picture-o text-white text-2xl"></i>
                     </div>
-                    <div class="fairy-card p-5 transform transition-all hover-lift" style="animation-delay: 0.2s">
-                        <div class="text-center mb-2 text-gray-500">分</div>
-                        <div id="minutes" class="text-[clamp(3rem,7vw,4.5rem)] font-bold text-center text-gray-700">00</div>
-                    </div>
-                    <div class="fairy-card p-5 transform transition-all hover-lift" style="animation-delay: 0.3s">
-                        <div class="text-center mb-2 text-gray-500">秒</div>
-                        <div id="seconds" class="text-[clamp(3rem,7vw,4.5rem)] font-bold text-center text-gray-700">00</div>
-                    </div>
+                    <h3 class="text-xl font-bold mt-2 mb-3 text-center">生日展馆</h3>
+                    <p class="text-gray-600 text-center mb-6">
+                        在展馆中查看所有生日统计，发现生日分布规律，感受时光的魔法。
+                    </p>
+                    <button id="goToGalleryBtn" class="bg-gradient-to-r from-fairyGreen to-fairyYellow text-white font-bold py-3 px-6 rounded-full w-full hover-pop">
+                        进入展馆 <i class="fa fa-university ml-2"></i>
+                    </button>
                 </div>
             </div>
-            
+
+            <!-- 即将到来的生日 -->
+            <div class="mt-16">
+                <h2 class="text-2xl font-bold text-center mb-8 text-shadow-fairy">
+                    <i class="fa fa-calendar-check-o text-fairyPink mr-2"></i>即将到来的生日
+                </h2>
+                <div id="upcomingBirthdays" class="max-w-4xl mx-auto">
+                    <!-- 即将到来的生日内容 -->
+                </div>
+            </div>
+
+            <footer class="mt-16 py-6 text-center text-gray-500 relative z-10">
+                <p>魔法时光 - 珍藏生活中的每一刻</p>
+                <p class="mt-2 text-sm">所有数据安全存储在您的设备上</p>
+            </footer>
+        </div>
+    </div>
+
+    <!-- 生日列表页面 -->
+    <div id="birthdayPage" class="page min-h-screen pt-20 pb-24 px-4 relative z-10">
+        <div class="max-w-6xl mx-auto">
+            <div class="text-center mb-10">
+                <h1 class="text-[clamp(1.8rem,4vw,3rem)] font-bold mb-4 text-shadow-fairy bg-gradient-to-r from-fairyPink to-fairyPurple bg-clip-text text-transparent">生日倒计时</h1>
+                <p class="text-gray-600">记录并追踪重要的生日日期</p>
+                <p class="text-gray-500 mt-2">已记录 <span id="birthdayCount" class="font-bold text-fairyPink">0</span> 个生日</p>
+            </div>
+
+            <!-- 最近生日 -->
+            <div class="bg-white rounded-2xl p-6 fairy-shadow mb-10" id="nearestBirthdayContainer">
+                <h2 class="text-xl font-bold text-gray-700 mb-4 flex items-center">
+                    <i class="fa fa-star text-fairyYellow mr-2"></i> 即将到来
+                </h2>
+                <div id="nearestBirthday" class="py-4">
+                    <p class="text-gray-500 text-center">添加第一个生日来开始倒计时</p>
+                </div>
+            </div>
+
             <!-- 生日列表 -->
-            <div class="max-w-5xl mx-auto fade-in" style="animation-delay: 0.7s">
-                <div class="flex justify-between items-center mb-6">
-                    <h2 class="text-[clamp(1.8rem,4vw,2.5rem)] font-bold text-white text-shadow">所有生日列表</h2>
-                    <span class="text-white/80 text-sm">共 <span id="birthdayCount">0</span> 个生日</span>
+            <h2 class="text-2xl font-bold text-gray-700 mb-6 flex items-center text-shadow-fairy">
+                <i class="fa fa-list-ul text-fairyPink mr-2"></i> 生日列表
+            </h2>
+            <div id="birthdaysList" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-16">
+                <!-- 生日卡片将通过JS动态添加 -->
+                <div class="text-center text-gray-500 py-12 bg-white rounded-2xl fairy-shadow">
+                    <i class="fa fa-calendar-o text-4xl mb-4 opacity-30"></i>
+                    <p>还没有添加任何生日记录</p>
+                    <button id="secondaryStartBtn" class="mt-4 bg-gradient-to-r from-fairyPink to-fairyPurple text-white font-bold py-2 px-6 rounded-full hover-pop">添加第一个生日</button>
                 </div>
-                
-                <div id="birthdaysList" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    <!-- 生日卡片将由JS动态生成 -->
-                    <div class="fairy-card p-6 text-center hover-lift">
-                        <div class="text-4xl text-fairyPrimary mb-4">
-                            <i class="fa fa-birthday-cake"></i>
-                        </div>
-                        <h3 class="text-xl font-bold text-gray-700 mb-2">添加第一个生日</h3>
-                        <p class="text-gray-600 mb-4">点击右下角的添加按钮开始</p>
-                        <div class="text-3xl text-fairyPrimary floating">
-                            <i class="fa fa-arrow-down"></i>
-                        </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 展馆页面 -->
+    <div id="galleryPage" class="page min-h-screen pt-20 pb-16 px-4 relative z-10">
+        <div class="max-w-6xl mx-auto">
+            <div class="text-center mb-10">
+                <h1 class="text-[clamp(1.8rem,4vw,3rem)] font-bold mb-4 text-shadow-fairy bg-gradient-to-r from-fairyGreen to-fairyBlue bg-clip-text text-transparent">生日展馆</h1>
+                <p class="text-gray-600">探索和统计所有生日数据</p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
+                <div class="bg-white rounded-2xl p-6 fairy-shadow hover-pop">
+                    <h3 class="text-gray-500 mb-2">总记录数</h3>
+                    <p id="profileBirthdayCount" class="text-3xl font-bold text-gray-700">0</p>
+                </div>
+                <div class="bg-white rounded-2xl p-6 fairy-shadow hover-pop">
+                    <h3 class="text-gray-500 mb-2">本月生日</h3>
+                    <p id="profileThisMonth" class="text-3xl font-bold text-gray-700">0</p>
+                </div>
+                <div class="bg-white rounded-2xl p-6 fairy-shadow hover-pop">
+                    <h3 class="text-gray-500 mb-2">30天内</h3>
+                    <p id="profileUpcoming" class="text-3xl font-bold text-gray-700">0</p>
+                </div>
+            </div>
+            
+            <div class="bg-white rounded-2xl p-6 fairy-shadow mb-8">
+                <h3 class="text-xl font-bold text-gray-700 mb-6">月份分布</h3>
+                <div class="grid grid-cols-3 sm:grid-cols-6 lg:grid-cols-12 gap-4">
+                    <div class="text-center p-3 bg-gray-50 rounded-lg hover-pop">
+                        <div class="text-sm text-gray-500">一月</div>
+                        <div class="text-xl font-bold text-gray-700" id="month-1">0</div>
+                    </div>
+                    <div class="text-center p-3 bg-gray-50 rounded-lg hover-pop">
+                        <div class="text-sm text-gray-500">二月</div>
+                        <div class="text-xl font-bold text-gray-700" id="month-2">0</div>
+                    </div>
+                    <div class="text-center p-3 bg-gray-50 rounded-lg hover-pop">
+                        <div class="text-sm text-gray-500">三月</div>
+                        <div class="text-xl font-bold text-gray-700" id="month-3">0</div>
+                    </div>
+                    <div class="text-center p-3 bg-gray-50 rounded-lg hover-pop">
+                        <div class="text-sm text-gray-500">四月</div>
+                        <div class="text-xl font-bold text-gray-700" id="month-4">0</div>
+                    </div>
+                    <div class="text-center p-3 bg-gray-50 rounded-lg hover-pop">
+                        <div class="text-sm text-gray-500">五月</div>
+                        <div class="text-xl font-bold text-gray-700" id="month-5">0</div>
+                    </div>
+                    <div class="text-center p-3 bg-gray-50 rounded-lg hover-pop">
+                        <div class="text-sm text-gray-500">六月</div>
+                        <div class="text-xl font-bold text-gray-700" id="month-6">0</div>
+                    </div>
+                    <div class="text-center p-3 bg-gray-50 rounded-lg hover-pop">
+                        <div class="text-sm text-gray-500">七月</div>
+                        <div class="text-xl font-bold text-gray-700" id="month-7">0</div>
+                    </div>
+                    <div class="text-center p-3 bg-gray-50 rounded-lg hover-pop">
+                        <div class="text-sm text-gray-500">八月</div>
+                        <div class="text-xl font-bold text-gray-700" id="month-8">0</div>
+                    </div>
+                    <div class="text-center p-3 bg-gray-50 rounded-lg hover-pop">
+                        <div class="text-sm text-gray-500">九月</div>
+                        <div class="text-xl font-bold text-gray-700" id="month-9">0</div>
+                    </div>
+                    <div class="text-center p-3 bg-gray-50 rounded-lg hover-pop">
+                        <div class="text-sm text-gray-500">十月</div>
+                        <div class="text-xl font-bold text-gray-700" id="month-10">0</div>
+                    </div>
+                    <div class="text-center p-3 bg-gray-50 rounded-lg hover-pop">
+                        <div class="text-sm text-gray-500">十一月</div>
+                        <div class="text-xl font-bold text-gray-700" id="month-11">0</div>
+                    </div>
+                    <div class="text-center p-3 bg-gray-50 rounded-lg hover-pop">
+                        <div class="text-sm text-gray-500">十二月</div>
+                        <div class="text-xl font-bold text-gray-700" id="month-12">0</div>
                     </div>
                 </div>
             </div>
+            
+            <p class="text-gray-500 text-sm">最后更新: <span id="lastUpdated">从未更新</span></p>
+        </div>
+    </div>
+
+    <!-- 添加生日表单 -->
+    <div id="addButtonContainer" class="fixed bottom-[30px] right-[30px] z-50 hidden">
+        <div class="add-form" id="addForm">
+            <div class="bg-white rounded-2xl p-6 w-full max-w-md fairy-shadow">
+                <h3 class="text-xl font-bold text-gray-700 mb-4">添加生日</h3>
+                <form id="birthdayForm">
+                    <div class="mb-4">
+                        <label for="name" class="block text-gray-600 mb-2">姓名</label>
+                        <input type="text" id="name" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-fairyPink/50" placeholder="请输入姓名" required>
+                    </div>
+                    
+                    <div class="mb-4">
+                        <label for="birthday" class="block text-gray-600 mb-2">生日日期</label>
+                        <input type="date" id="birthday" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-fairyPink/50" required>
+                    </div>
+                    
+                    <div class="mb-4">
+                        <label class="block text-gray-600 mb-2">头像</label>
+                        <div class="avatar-upload-container">
+                            <div class="flex items-center mb-3">
+                                <div class="avatar-preview w-20 h-20 rounded-full bg-gray-200 overflow-hidden mr-4">
+                                    <img id="avatarPreview" src="https://picsum.photos/200/200?random=1" alt="头像预览" class="w-full h-full object-cover">
+                                </div>
+                                <div>
+                                    <button type="button" id="uploadBtn" class="bg-fairyPink text-white font-medium py-1 px-3 rounded-full text-sm hover:bg-fairyPink/90 mr-2">
+                                        <i class="fa fa-upload mr-1"></i> 上传图片
+                                    </button>
+                                    <input type="file" id="imageUpload" accept="image/*" class="hidden">
+                                </div>
+                            </div>
+                            <div>
+                                <label for="imageUrl" class="block text-gray-600 mb-1 text-sm">或输入图片链接</label>
+                                <input type="url" id="imageUrl" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-fairyPink/50 text-sm" placeholder="https://example.com/avatar.jpg">
+                                <p class="text-gray-400 text-xs mt-1">支持JPG、PNG等格式的图片链接</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-4">
+                        <label for="note" class="block text-gray-600 mb-2">备注 (可选)</label>
+                        <textarea id="note" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-fairyPink/50" rows="2" placeholder="添加一些备注信息..."></textarea>
+                    </div>
+                    
+                    <div class="flex gap-3">
+                        <button type="button" id="closeForm" class="w-1/3 py-3 px-4 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
+                            取消
+                        </button>
+                        <button type="submit" class="w-2/3 bg-gradient-to-r from-fairyPink to-fairyPurple text-white font-bold py-3 px-4 rounded-lg hover-pop">
+                            <i class="fa fa-magic mr-2"></i> 添加生日
+                        </button>
+                    </div>
+                </form>
+            </div>
         </div>
         
-        <!-- 页脚 -->
-        <footer class="mt-16 py-6 text-center text-white/70 relative z-10 fade-in" style="animation-delay: 0.9s">
-            <p class="text-shadow">让每一个生日都值得期待</p>
-            <p class="mt-2 text-sm">数据保存在您的浏览器本地存储中</p>
-        </footer>
-    </div>
-<!-- 展馆页面 -->
-<div id="galleryPage" class="page">
-    <div class="container mx-auto px-4 py-12 relative z-10 text-center">
-        <div class="max-w-2xl mx-auto fairy-card p-10 mt-16">
-            <div class="text-6xl text-fairyGreen mb-6">
-                <i class="fa fa-university floating"></i>
-            </div>
-            <h2 class="text-3xl font-bold text-gray-700 mb-4">时光展馆</h2>
-            <p class="text-gray-600 mb-8">这里展示着您记录的所有美好时刻，每一个都值得珍藏</p>
-            
-            <div class="gallery-stats grid grid-cols-2 gap-4 mb-8">
-                <div class="fairy-card p-4">
-                    <div class="text-2xl text-fairyPrimary mb-1"><i class="fa fa-birthday-cake"></i></div>
-                    <h3 class="font-bold text-gray-700">生日记录</h3>
-                    <p class="text-2xl font-bold text-gray-600" id="galleryBirthdayCount">0</p>
-                </div>
-            </div>
-            
-            <button class="fairy-button px-6 py-3" id="backFromGalleryBtn">
-                <i class="fa fa-arrow-left mr-2"></i> 返回主页
-            </button>
-        </div>
-    </div>
-</div>
-    <!-- 右下角添加按钮 -->
-    <div class="fixed bottom-6 right-6 z-50" id="addButtonContainer">
-        <button id="addButton" class="w-16 h-16 rounded-full fairy-button flex items-center justify-center text-2xl shadow-xl transition-all transform hover:scale-110 hover-lift ripple">
+        <button id="addButton" class="w-16 h-16 rounded-full bg-gradient-to-r from-fairyPink to-fairyPurple text-white shadow-lg flex items-center justify-center text-2xl hover-pop">
             <i class="fa fa-plus"></i>
         </button>
     </div>
-    
-    <!-- 添加生日表单 -->
-    <div id="addForm" class="add-form">
-        <div class="fairy-card p-6 w-[340px] hover-lift">
-            <div class="flex justify-between items-center mb-4">
-                <h3 class="text-xl font-bold text-gray-700">添加生日</h3>
-                <button id="closeForm" class="text-gray-500 hover:text-gray-700 transition-colors">
-                    <i class="fa fa-times"></i>
-                </button>
-            </div>
-            
-            <form id="birthdayForm" class="space-y-4">
-                <!-- 头像上传区域 -->
-                <div class="avatar-upload">
-                    <label class="block text-sm font-medium text-gray-700 mb-2">头像</label>
-                    <div class="avatar-preview" id="avatarPreview">
-                        <div class="avatar-placeholder">
-                            <i class="fa fa-user"></i>
-                        </div>
-                    </div>
-                    <button type="button" class="upload-btn" id="uploadBtn">
-                        <i class="fa fa-upload mr-1"></i> 上传图片
-                    </button>
-                    <input type="file" id="imageUpload" accept="image/*" class="hidden">
-                    <input type="url" id="imageUrl" placeholder="或输入图片链接" class="fairy-input image-url-input focus:ring-2 focus:ring-fairyPrimary">
-                </div>
-                
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">姓名</label>
-                    <input type="text" id="nameInput" placeholder="例如: 小王子" required="" class="w-full fairy-input focus:ring-2 focus:ring-fairyPrimary">
-                </div>
-                
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">生日日期</label>
-                    <input type="date" id="dateInput" required="" class="w-full fairy-input focus:ring-2 focus:ring-fairyPrimary">
-                </div>
 
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">备注 (可选)</label>
-                    <input type="text" id="noteInput" placeholder="例如: 送什么礼物" class="w-full fairy-input focus:ring-2 focus:ring-fairyPrimary">
-                </div>
-                
-                <button type="submit" class="w-full fairy-button py-3 px-4 mt-2 hover-lift ripple">
-                    <i class="fa fa-magic mr-2"></i> 添加生日
-                </button>
-            </form>
+    <!-- 通知组件 -->
+    <div class="fixed top-20 left-1/2 transform -translate-x-1/2 bg-white shadow-lg rounded-lg p-4 flex items-center z-50 hidden" id="notification">
+        <div class="mr-3">
+            <i class="fa fa-info-circle text-xl text-fairyPink"></i>
         </div>
+        <div class="flex-1">
+            <div class="font-bold text-gray-800" id="notificationTitle"></div>
+            <div class="text-gray-600" id="notificationMessage"></div>
+        </div>
+        <button class="ml-3 text-gray-400 hover:text-gray-600" id="closeNotification">
+            <i class="fa fa-times"></i>
+        </button>
     </div>
-    
+
     <!-- 背景音乐元素 -->
-    <audio id="backgroundMusic" loop="">
+    <audio id="backgroundMusic" loop>
         <!-- 音乐文件会通过JavaScript动态加载 -->
     </audio>
-    <script src="app.js"></script>
-</body></html>
-    
+
+    <script>
+        // 童话风格颜色主题列表
+        const fairyThemes = [
+            'theme-pink',
+            'theme-blue',
+            'theme-purple',
+            'theme-green',
+            'theme-yellow',
+            'theme-orange',
+            'theme-teal'
+        ];
+
+        // 随机获取一个童话风格主题
+        function getRandomFairyTheme() {
+            return fairyThemes[Math.floor(Math.random() * fairyThemes.length)];
+        }
+
+        // 创建粒子背景
+        function createParticles() {
+            const container = document.getElementById('particles-container');
+            if (!container) return;
+            
+            // 清除现有粒子
+            container.innerHTML = '';
+            
+            // 粒子颜色 - 童话风格
+            const particleColors = [
+                '#FF6B8B', '#6BBEF5', '#B794F4', 
+                '#6BCB77', '#FFD93D', '#FF9F43', '#4DD0E1'
+            ];
+            
+            // 创建粒子
+            const particleCount = window.innerWidth < 768 ? 20 : 40;
+            for (let i = 0; i < particleCount; i++) {
+                const particle = document.createElement('div');
+                particle.classList.add('particle');
+                
+                // 随机大小
+                const size = Math.random() * 8 + 2;
+                particle.style.width = `${size}px`;
+                particle.style.height = `${size}px`;
+                
+                // 随机位置
+                particle.style.left = `${Math.random() * 100}%`;
+                particle.style.top = `${Math.random() * 100}%`;
+                
+                // 随机颜色
+                particle.style.backgroundColor = particleColors[Math.floor(Math.random() * particleColors.length)];
+                
+                // 随机动画延迟
+                particle.style.animationDelay = `${Math.random() * 5}s`;
+                
+                container.appendChild(particle);
+            }
+        }
+
+        // 导航功能实现 - 修复导航栏无法展开问题
+        function initNavigation() {
+            const navToggle = document.getElementById('navToggle');
+            const navItems = document.getElementById('navItems');
+            const navButtons = document.querySelectorAll('.nav-item');
+            let isNavOpen = false;
+
+            // 导航切换按钮 - 简化逻辑并确保正确工作
+            if (navToggle && navItems) {
+                // 确保初始状态正确
+                navItems.classList.add('hidden');
+                
+                navToggle.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    isNavOpen = !isNavOpen;
+                    
+                    if (isNavOpen) {
+                        navItems.classList.remove('hidden');
+                        // 更新图标
+                        const icon = navToggle.querySelector('i');
+                        icon.className = 'fa fa-times text-fairyPink text-xl';
+                    } else {
+                        navItems.classList.add('hidden');
+                        // 更新图标
+                        const icon = navToggle.querySelector('i');
+                        icon.className = 'fa fa-magic text-fairyPink text-xl';
+                    }
+                });
+
+                // 导航按钮点击事件
+                navButtons.forEach(button => {
+                    button.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        const targetId = button.id.replace('Nav', 'Page');
+                        navigateToPage(targetId);
+                        
+                        // 关闭导航菜单
+                        isNavOpen = false;
+                        navItems.classList.add('hidden');
+                        const icon = navToggle.querySelector('i');
+                        icon.className = 'fa fa-magic text-fairyPink text-xl';
+                    });
+                });
+
+                // 点击其他区域关闭导航
+                document.addEventListener('click', (e) => {
+                    if (!navItems.contains(e.target) && !navToggle.contains(e.target) && isNavOpen) {
+                        isNavOpen = false;
+                        navItems.classList.add('hidden');
+                        const icon = navToggle.querySelector('i');
+                        icon.className = 'fa fa-magic text-fairyPink text-xl';
+                    }
+                });
+            }
+
+            // 页面导航按钮
+            const goToBirthdayBtn = document.getElementById('goToBirthdayBtn');
+            const goToGalleryBtn = document.getElementById('goToGalleryBtn');
+            const startJourneyBtn = document.getElementById('startJourneyBtn');
+            const mainStartBtn = document.getElementById('mainStartBtn');
+            const secondaryStartBtn = document.getElementById('secondaryStartBtn');
+
+            if (goToBirthdayBtn) {
+                goToBirthdayBtn.addEventListener('click', () => navigateToPage('birthdayPage'));
+            }
+            
+            if (goToGalleryBtn) {
+                goToGalleryBtn.addEventListener('click', () => navigateToPage('galleryPage'));
+            }
+            
+            if (startJourneyBtn) {
+                startJourneyBtn.addEventListener('click', () => {
+                    navigateToPage('birthdayPage');
+                    setTimeout(() => toggleAddForm(true), 500);
+                });
+            }
+            
+            if (mainStartBtn) {
+                mainStartBtn.addEventListener('click', () => {
+                    navigateToPage('birthdayPage');
+                    setTimeout(() => toggleAddForm(true), 500);
+                });
+            }
+            
+            if (secondaryStartBtn) {
+                secondaryStartBtn.addEventListener('click', () => toggleAddForm(true));
+            }
+        }
+
+        // 页面导航函数
+        function navigateToPage(pageId) {
+            const pages = document.querySelectorAll('.page');
+            pages.forEach(page => {
+                page.classList.remove('active');
+            });
+
+            const targetPage = document.getElementById(pageId);
+            if (targetPage) {
+                targetPage.classList.add('active');
+                // 滚动到页面顶部
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+                
+                // 控制添加按钮的显示 - 只在生日页面显示
+                const addButtonContainer = document.getElementById('addButtonContainer');
+                if (addButtonContainer) {
+                    if (pageId === 'birthdayPage') {
+                        addButtonContainer.classList.remove('hidden');
+                    } else {
+                        addButtonContainer.classList.add('hidden');
+                        // 确保表单关闭
+                        toggleAddForm(false);
+                    }
+                }
+            }
+        }
+
+        // 音乐播放组件增强
+        function initMusicPlayer() {
+            const musicElement = document.getElementById('backgroundMusic');
+            const playPauseBtn = document.getElementById('playPauseBtn');
+            const mobilePlayPauseBtn = document.getElementById('mobilePlayPauseBtn');
+            const prevTrackBtn = document.getElementById('prevTrack');
+            const nextTrackBtn = document.getElementById('nextTrack');
+            const volumeSlider = document.getElementById('volumeSlider');
+            const mobileVolumeSlider = document.getElementById('mobileVolumeSlider');
+            const progressBar = document.getElementById('progressBar');
+            const progressContainer = document.querySelector('.music-progress');
+            const currentTrackEl = document.getElementById('currentTrack');
+            
+            // 音乐状态
+            let isPlaying = false;
+            let currentTrackIndex = 0;
+            
+            // 音乐文件列表 - 丰富曲目
+            const musicFiles = [
+                { file: 'Music/1.mp3', name: 'Andrew Prahlow - Travelersencore' },
+                { file: 'Music/2.mp3', name: '江语 - Cable Car' },
+                { file: 'Music/3.mp3', name: 'beabadoobee - Coffee' },
+                { file: 'Music/4.mp3', name: 'fcj&Alys&demxntia - Gamble' },
+                { file: 'Music/5.mp3', name: 'White Cherry - MELANCHOLY' },
+                { file: 'Music/6.mp3', name: 'mj apanay&aren park - Time Machine' }
+            ];
+
+            // 初始化第一个音乐
+            loadMusic(currentTrackIndex);
+
+            // 播放/暂停按钮事件
+            function setupPlayPause(btn) {
+                if (btn) {
+                    btn.addEventListener('click', togglePlayPause);
+                }
+            }
+            
+            setupPlayPause(playPauseBtn);
+            setupPlayPause(mobilePlayPauseBtn);
+
+            // 上一曲/下一曲按钮
+            if (prevTrackBtn) {
+                prevTrackBtn.addEventListener('click', playPrevTrack);
+            }
+            
+            if (nextTrackBtn) {
+                nextTrackBtn.addEventListener('click', playNextTrack);
+            }
+
+            // 音量控制 - 同步桌面和移动设备的音量控制
+            function setupVolumeControl(slider, isMobile = false) {
+                if (slider) {
+                    slider.addEventListener('input', () => {
+                        const volume = slider.value / 100;
+                        musicElement.volume = volume;
+                        
+                        // 同步另一个滑块
+                        if (isMobile && volumeSlider) {
+                            volumeSlider.value = slider.value;
+                        } else if (!isMobile && mobileVolumeSlider) {
+                            mobileVolumeSlider.value = slider.value;
+                        }
+                        
+                        // 保存音量设置
+                        localStorage.setItem('musicVolume', volume);
+                    });
+                }
+            }
+            
+            setupVolumeControl(volumeSlider);
+            setupVolumeControl(mobileVolumeSlider, true);
+            
+            // 加载保存的音量
+            const savedVolume = localStorage.getItem('musicVolume');
+            if (savedVolume !== null) {
+                musicElement.volume = parseFloat(savedVolume);
+                if (volumeSlider) volumeSlider.value = parseFloat(savedVolume) * 100;
+                if (mobileVolumeSlider) mobileVolumeSlider.value = parseFloat(savedVolume) * 100;
+            }
+
+            // 进度条更新
+            musicElement.addEventListener('timeupdate', updateProgress);
+
+            // 点击进度条跳转
+            if (progressContainer) {
+                progressContainer.addEventListener('click', (e) => {
+                    const width = progressContainer.clientWidth;
+                    const clickX = e.offsetX;
+                    const duration = musicElement.duration;
+                    musicElement.currentTime = (clickX / width) * duration;
+                });
+            }
+
+            // 音乐结束时自动播放下一首
+            musicElement.addEventListener('ended', playNextTrack);
+
+            // 播放/暂停切换
+            function togglePlayPause() {
+                if (isPlaying) {
+                    musicElement.pause();
+                    if (playPauseBtn) playPauseBtn.innerHTML = '<i class="fa fa-play"></i>';
+                    if (mobilePlayPauseBtn) mobilePlayPauseBtn.innerHTML = '<i class="fa fa-play"></i>';
+                } else {
+                    musicElement.play()
+                        .then(() => {
+                            if (playPauseBtn) playPauseBtn.innerHTML = '<i class="fa fa-pause"></i>';
+                            if (mobilePlayPauseBtn) mobilePlayPauseBtn.innerHTML = '<i class="fa fa-pause"></i>';
+                        })
+                        .catch(error => {
+                            console.error('播放失败:', error);
+                            showNotification('播放失败', '浏览器阻止了自动播放，请手动点击播放按钮');
+                        });
+                }
+                isPlaying = !isPlaying;
+            }
+
+            // 加载音乐
+            function loadMusic(index) {
+                if (index >= 0 && index < musicFiles.length) {
+                    currentTrackIndex = index;
+                    const track = musicFiles[index];
+                    musicElement.src = track.file;
+                    if (currentTrackEl) currentTrackEl.textContent = track.name;
+                    
+                    // 如果之前是播放状态，继续播放
+                    if (isPlaying) {
+                        musicElement.play().catch(error => {
+                            console.error('播放失败:', error);
+                        });
+                    }
+                }
+            }
+
+            // 播放上一首
+            function playPrevTrack() {
+                let prevIndex = currentTrackIndex - 1;
+                if (prevIndex < 0) {
+                    prevIndex = musicFiles.length - 1; // 循环播放
+                }
+                loadMusic(prevIndex);
+            }
+
+            // 播放下一首
+            function playNextTrack() {
+                let nextIndex = currentTrackIndex + 1;
+                if (nextIndex >= musicFiles.length) {
+                    nextIndex = 0; // 循环播放
+                }
+                loadMusic(nextIndex);
+            }
+
+            // 更新进度条
+            function updateProgress() {
+                const { currentTime, duration } = musicElement;
+                if (isNaN(duration)) return;
+                
+                const progressPercent = (currentTime / duration) * 100;
+                if (progressBar) progressBar.style.width = `${progressPercent}%`;
+            }
+        }
+
+        // 主页功能 - 重点优化即将到来的生日样式
+        function initHomePage() {
+            // 加载最近生日
+            loadUpcomingBirthdays();
+        }
+
+        // 加载即将到来的生日（1.35样式）
+        function loadUpcomingBirthdays() {
+            const container = document.getElementById('upcomingBirthdays');
+            if (!container) return;
+            
+            // 从本地存储获取生日数据
+            const birthdays = JSON.parse(localStorage.getItem('birthdays') || '[]');
+            
+            if (birthdays.length === 0) {
+                container.innerHTML = `
+                    <div class="bg-white rounded-2xl p-8 fairy-shadow text-center">
+                        <i class="fa fa-calendar-o text-5xl mb-4 text-gray-200"></i>
+                        <p class="text-gray-500">添加第一个生日记录，开始你的倒计时之旅吧！</p>
+                        <button id="homeAddFirstBtn" class="mt-6 bg-gradient-to-r from-fairyPink to-fairyPurple text-white font-bold py-3 px-8 rounded-full hover-pop">
+                            添加第一个生日
+                        </button>
+                    </div>
+                `;
+                
+                // 绑定添加按钮事件
+                document.getElementById('homeAddFirstBtn').addEventListener('click', () => {
+                    navigateToPage('birthdayPage');
+                    setTimeout(() => toggleAddForm(true), 500);
+                });
+                return;
+            }
+            
+            // 排序：最近的生日排在前面
+            const sortedBirthdays = [...birthdays].sort((a, b) => {
+                const daysA = getDaysUntilNextBirthday(new Date(a.date));
+                const daysB = getDaysUntilNextBirthday(new Date(b.date));
+                return daysA - daysB;
+            });
+            
+            // 只显示最近的2个生日
+            const upcoming = sortedBirthdays.slice(0, 2);
+            
+            let html = '';
+            upcoming.forEach((birthday, index) => {
+                const daysUntil = getDaysUntilNextBirthday(new Date(birthday.date));
+                const birthDate = new Date(birthday.date);
+                const formattedDate = `${birthDate.getMonth() + 1}月${birthDate.getDate()}日`;
+                
+                // 随机背景颜色
+                const bgColors = [
+                    'bg-gradient-to-r from-pink-100 to-purple-100',
+                    'bg-gradient-to-r from-blue-100 to-teal-100',
+                    'bg-gradient-to-r from-green-100 to-yellow-100'
+                ];
+                const bgColor = bgColors[index % bgColors.length];
+                
+                html += `
+                    <div class="upcoming-birthday fairy-shadow mb-6">
+                        <div class="upcoming-header ${bgColor} p-6">
+                            <div class="relative z-10 flex flex-col md:flex-row items-center justify-between">
+                                <div class="flex items-center mb-4 md:mb-0">
+                                    <div class="upcoming-avatar rounded-full overflow-hidden mr-4">
+                                        <img src="${birthday.avatar || 'https://picsum.photos/200/200?random=1'}" alt="${birthday.name}" class="w-full h-full object-cover">
+                                    </div>
+                                    <div>
+                                        <h3 class="text-2xl font-bold text-white text-shadow-fairy">${birthday.name}</h3>
+                                        <p class="text-white/90">${formattedDate} ${daysUntil === 0 ? '<span class="font-bold">今天生日！🎉</span>' : ''}</p>
+                                    </div>
+                                </div>
+                                
+                                <div class="flex items-center">
+                                    ${daysUntil === 0 ? 
+                                        '<span class="bg-white text-fairyPink font-bold py-2 px-4 rounded-full animate-pulse-slow">今天生日！</span>' : 
+                                        `<div class="flex gap-2">
+                                            <div class="countdown-box-upcoming px-3 py-2">
+                                                <div class="text-2xl font-bold countdown-glow">${Math.floor(daysUntil / 30)}</div>
+                                                <div class="text-xs text-gray-600">月</div>
+                                            </div>
+                                            <div class="countdown-box-upcoming px-3 py-2">
+                                                <div class="text-2xl font-bold countdown-glow">${daysUntil % 30}</div>
+                                                <div class="text-xs text-gray-600">天</div>
+                                            </div>
+                                        </div>`
+                                    }
+                                </div>
+                            </div>
+                        </div>
+                        
+                        ${birthday.note ? 
+                            `<div class="p-4 bg-gray-50">
+                                <p class="text-gray-600 italic"><i class="fa fa-comment text-fairyPink mr-1"></i> ${birthday.note}</p>
+                            </div>` : ''
+                        }
+                    </div>
+                `;
+            });
+            
+            container.innerHTML = html;
+        }
+
+        // 格式化日期显示
+        function formatDate(date) {
+            const month = date.getMonth() + 1;
+            const day = date.getDate();
+            return `${month}月${day}日`;
+        }
+
+        // 获取距离下一个生日的天数
+        function getDaysUntilNextBirthday(birthDate) {
+            const today = new Date();
+            let nextBirthday = new Date(today.getFullYear(), birthDate.getMonth(), birthDate.getDate());
+            
+            // 如果今年的生日已经过了，计算明年的
+            if (nextBirthday < today) {
+                nextBirthday.setFullYear(nextBirthday.getFullYear() + 1);
+            }
+            
+            // 计算天数差
+            const diffTime = nextBirthday - today;
+            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+            
+            return diffDays;
+        }
+
+        // 生日倒计时功能 - 修复排序问题
+        let birthdays = [];
+        let nearestBirthdayEl;
+
+        function initBirthdayCountdown() {
+            // 获取DOM元素
+            nearestBirthdayEl = document.getElementById('nearestBirthday');
+            const addButton = document.getElementById('addButton');
+            const addForm = document.getElementById('addForm');
+            const closeForm = document.getElementById('closeForm');
+            const birthdayForm = document.getElementById('birthdayForm');
+            const uploadBtn = document.getElementById('uploadBtn');
+            const imageUpload = document.getElementById('imageUpload');
+            const avatarPreview = document.getElementById('avatarPreview');
+            const imageUrlInput = document.getElementById('imageUrl');
+            
+            // 从本地存储加载生日数据
+            loadBirthdays();
+            
+            // 事件监听
+            if (addButton) {
+                addButton.addEventListener('click', () => toggleAddForm(true));
+            }
+            
+            if (closeForm) {
+                closeForm.addEventListener('click', () => toggleAddForm(false));
+            }
+            
+            if (birthdayForm) {
+                birthdayForm.addEventListener('submit', handleFormSubmit);
+            }
+            
+            // 头像上传
+            if (uploadBtn && imageUpload) {
+                uploadBtn.addEventListener('click', () => imageUpload.click());
+                
+                imageUpload.addEventListener('change', (e) => {
+                    if (e.target.files && e.target.files[0]) {
+                        const reader = new FileReader();
+                        
+                        reader.onload = (e) => {
+                            avatarPreview.src = e.target.result;
+                            imageUrlInput.value = e.target.result;
+                        };
+                        
+                        reader.readAsDataURL(e.target.files[0]);
+                    }
+                });
+            }
+            
+            // 图片链接输入
+            if (imageUrlInput) {
+                imageUrlInput.addEventListener('change', () => {
+                    const url = imageUrlInput.value.trim();
+                    if (url) {
+                        // 尝试加载图片
+                        const img = new Image();
+                        img.onload = () => {
+                            avatarPreview.src = url;
+                        };
+                        img.onerror = () => {
+                            showNotification('图片错误', '无法加载该图片链接，请检查URL是否正确');
+                        };
+                        img.src = url;
+                    }
+                });
+            }
+            
+            // 初始化倒计时更新
+            setInterval(updateAllCountdowns, 1000);
+        }
+
+        // 从本地存储加载生日数据
+        function loadBirthdays() {
+            const savedBirthdays = localStorage.getItem('birthdays');
+            birthdays = savedBirthdays ? JSON.parse(savedBirthdays) : [];
+            
+            // 更新UI
+            renderBirthdayList();
+            updateNearestBirthday();
+            updateBirthdayCount();
+            updateLastUpdated();
+        }
+
+        // 保存生日数据到本地存储
+        function saveBirthdays() {
+            localStorage.setItem('birthdays', JSON.stringify(birthdays));
+            updateLastUpdated();
+            
+            // 同时更新主页的最近生日
+            loadUpcomingBirthdays();
+            // 同时更新展馆数据
+            updateGalleryStats();
+        }
+
+        // 处理表单提交
+        function handleFormSubmit(e) {
+            e.preventDefault();
+            
+            const nameInput = document.getElementById('name');
+            const dateInput = document.getElementById('birthday');
+            const noteInput = document.getElementById('note');
+            const imageUrlInput = document.getElementById('imageUrl');
+            
+            if (!nameInput.value || !dateInput.value) {
+                showNotification('输入错误', '请填写姓名和生日日期');
+                return;
+            }
+            
+            // 验证日期格式
+            const birthDate = new Date(dateInput.value);
+            if (isNaN(birthDate.getTime())) {
+                showNotification('输入错误', '请输入有效的日期');
+                return;
+            }
+            
+            // 创建新生日对象
+            const newBirthday = {
+                id: Date.now().toString(),
+                name: nameInput.value.trim(),
+                date: dateInput.value,
+                note: noteInput.value.trim(),
+                avatar: imageUrlInput.value || 'https://picsum.photos/200/200?random=1',
+                added: new Date().toISOString(),
+                theme: getRandomFairyTheme() // 随机分配童话风格主题
+            };
+            
+            // 添加到数组并保存
+            birthdays.push(newBirthday);
+            saveBirthdays();
+            
+            // 更新UI
+            renderBirthdayList();
+            updateNearestBirthday();
+            updateBirthdayCount();
+            
+            // 重置表单并关闭
+            birthdayForm.reset();
+            // 恢复默认头像
+            avatarPreview.src = 'https://picsum.photos/200/200?random=1';
+            imageUrlInput.value = '';
+            toggleAddForm(false);
+            
+            showNotification('添加成功', `${newBirthday.name}的生日已添加`);
+        }
+
+        // 渲染生日列表（1.2样式基础上丰富，使用随机童话风格颜色）
+        function renderBirthdayList() {
+            const listContainer = document.getElementById('birthdaysList');
+            if (!listContainer) return;
+            
+            if (birthdays.length === 0) {
+                listContainer.innerHTML = `
+                    <div class="text-center text-gray-500 py-12 bg-white rounded-2xl fairy-shadow">
+                        <i class="fa fa-calendar-o text-4xl mb-4 opacity-30"></i>
+                        <p>还没有添加任何生日记录</p>
+                        <button id="secondaryStartBtn" class="mt-4 bg-gradient-to-r from-fairyPink to-fairyPurple text-white font-bold py-2 px-6 rounded-full hover-pop">添加第一个生日</button>
+                    </div>
+                `;
+                
+                // 重新绑定按钮事件
+                document.getElementById('secondaryStartBtn').addEventListener('click', () => toggleAddForm(true));
+                return;
+            }
+            
+            // 按日期排序
+            const sortedBirthdays = [...birthdays].sort((a, b) => {
+                const daysA = getDaysUntilNextBirthday(new Date(a.date));
+                const daysB = getDaysUntilNextBirthday(new Date(b.date));
+                return daysA - daysB;
+            });
+            
+            let html = '';
+            sortedBirthdays.forEach(birthday => {
+                const birthDate = new Date(birthday.date);
+                const daysUntil = getDaysUntilNextBirthday(birthDate);
+                const formattedDate = formatDate(birthDate);
+                const countdownHtml = getCountdownHtml(birthday.date);
+                
+                // 如果没有主题，随机分配一个
+                const theme = birthday.theme || getRandomFairyTheme();
+                
+                html += `
+                    <div class="birthday-card bg-white rounded-2xl p-6 fairy-shadow ${theme}" data-id="${birthday.id}">
+                        <div class="text-center">
+                            <div class="w-20 h-20 rounded-full overflow-hidden mx-auto mb-4 border-4 white">
+                                <img src="${birthday.avatar || 'https://picsum.photos/200/200?random=1'}" alt="${birthday.name}" class="w-full h-full object-cover">
+                            </div>
+                            <h3 class="text-xl font-bold mb-1">${birthday.name}</h3>
+                            <p class="text-gray-600 mb-4">${formattedDate} ${daysUntil === 0 ? '<span class="text-fairyPink font-bold">今天生日！🎉</span>' : ''}</p>
+                            
+                            <div class="flex justify-center gap-2 mb-4 countdown-container">
+                                ${countdownHtml}
+                            </div>
+                            
+                            ${birthday.note ? `<p class="text-gray-600 text-sm italic mb-4"><i class="fa fa-comment-o mr-1"></i> ${birthday.note}</p>` : ''}
+                            
+                            <div class="flex justify-center gap-3">
+                                <button class="edit-btn px-3 py-1 bg-gray-100 text-gray-700 rounded-full text-sm hover:bg-gray-200 transition-colors" data-id="${birthday.id}">
+                                    <i class="fa fa-edit mr-1"></i> 编辑
+                                </button>
+                                <button class="delete-btn px-3 py-1 bg-gray-100 text-gray-700 rounded-full text-sm hover:bg-gray-200 transition-colors" data-id="${birthday.id}">
+                                    <i class="fa fa-trash mr-1"></i> 删除
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+            
+            listContainer.innerHTML = html;
+            
+            // 绑定编辑和删除事件
+            document.querySelectorAll('.delete-btn').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    const id = e.currentTarget.dataset.id;
+                    deleteBirthday(id);
+                });
+            });
+            
+            document.querySelectorAll('.edit-btn').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    const id = e.currentTarget.dataset.id;
+                    editBirthday(id);
+                });
+            });
+        }
+
+        // 更新最近的生日
+        function updateNearestBirthday() {
+            if (!nearestBirthdayEl) return;
+            
+            if (birthdays.length === 0) {
+                nearestBirthdayEl.innerHTML = '<p class="text-gray-500 text-center">添加第一个生日来开始倒计时</p>';
+                return;
+            }
+
+            // 找到最近的生日
+            const sortedBirthdays = [...birthdays].sort((a, b) => {
+                const daysA = getDaysUntilNextBirthday(new Date(a.date));
+                const daysB = getDaysUntilNextBirthday(new Date(b.date));
+                return daysA - daysB;
+            });
+
+            const nearest = sortedBirthdays[0];
+            const daysUntil = getDaysUntilNextBirthday(new Date(nearest.date));
+            const birthDate = new Date(nearest.date);
+            const formattedDate = formatDate(birthDate);
+            
+            // 显示最近生日信息
+            nearestBirthdayEl.innerHTML = `
+                <div class="flex flex-col md:flex-row items-center justify-between">
+                    <div class="flex items-center mb-4 md:mb-0">
+                        <div class="w-16 h-16 rounded-full overflow-hidden mr-4 border-2 solid ${nearest.theme ? nearest.theme.replace('theme-', 'border-fairy') : 'border-fairyPink'}">
+                            <img src="${nearest.avatar || 'https://picsum.photos/200/200?random=1'}" alt="${nearest.name}" class="w-full h-full object-cover">
+                        </div>
+                        <div>
+                            <h3 class="text-xl font-bold">${nearest.name}</h3>
+                            <p class="text-gray-600">${formattedDate}</p>
+                        </div>
+                    </div>
+                    
+                    <div class="text-center md:text-right">
+                        ${daysUntil === 0 ? 
+                            '<p class="text-fairyPink font-bold text-xl animate-pulse-slow">今天是TA的生日！🎉</p>' : 
+                            `<div class="flex justify-center md:justify-end gap-2">
+                                ${getCountdownHtml(nearest.date)}
+                            </div>`
+                        }
+                    </div>
+                </div>
+            `;
+        }
+
+        // 更新生日计数
+        function updateBirthdayCount() {
+            const countEl = document.getElementById('birthdayCount');
+            if (countEl) {
+                countEl.textContent = birthdays.length;
+            }
+        }
+
+        // 更新最后更新时间
+        function updateLastUpdated() {
+            const lastUpdatedEl = document.getElementById('lastUpdated');
+            if (!lastUpdatedEl) return;
+            
+            const now = new Date();
+            const options = { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' };
+            lastUpdatedEl.textContent = now.toLocaleString('zh-CN', options);
+            
+            // 保存最后更新时间
+            localStorage.setItem('lastUpdated', now.toISOString());
+        }
+
+        // 删除生日
+        function deleteBirthday(id) {
+            const birthday = birthdays.find(b => b.id === id);
+            if (!birthday) return;
+            
+            if (confirm(`确定要删除${birthday.name}的生日记录吗？`)) {
+                birthdays = birthdays.filter(b => b.id !== id);
+                saveBirthdays();
+                
+                // 更新UI
+                renderBirthdayList();
+                updateNearestBirthday();
+                updateBirthdayCount();
+                
+                showNotification('删除成功', `${birthday.name}的生日记录已删除`);
+            }
+        }
+
+        // 编辑生日
+        function editBirthday(id) {
+            const birthday = birthdays.find(b => b.id === id);
+            if (!birthday) return;
+            
+            // 填充表单
+            document.getElementById('name').value = birthday.name;
+            document.getElementById('birthday').value = birthday.date;
+            document.getElementById('note').value = birthday.note || '';
+            document.getElementById('imageUrl').value = birthday.avatar || '';
+            document.getElementById('avatarPreview').src = birthday.avatar || 'https://picsum.photos/200/200?random=1';
+            
+            // 显示表单
+            toggleAddForm(true);
+            
+            // 修改表单提交事件
+            const birthdayForm = document.getElementById('birthdayForm');
+            const originalSubmitHandler = birthdayForm.onsubmit;
+            
+            birthdayForm.onsubmit = function(e) {
+                e.preventDefault();
+                
+                const nameInput = document.getElementById('name');
+                const dateInput = document.getElementById('birthday');
+                const noteInput = document.getElementById('note');
+                const imageUrlInput = document.getElementById('imageUrl');
+                
+                if (!nameInput.value || !dateInput.value) {
+                    showNotification('输入错误', '请填写姓名和生日日期');
+                    return;
+                }
+                
+                // 更新生日信息
+                const index = birthdays.findIndex(b => b.id === id);
+                if (index !== -1) {
+                    birthdays[index] = {
+                        ...birthdays[index],
+                        name: nameInput.value.trim(),
+                        date: dateInput.value,
+                        note: noteInput.value.trim(),
+                        avatar: imageUrlInput.value || 'https://picsum.photos/200/200?random=1'
+                        // 保留原有的主题
+                    };
+                    
+                    saveBirthdays();
+                    
+                    // 更新UI
+                    renderBirthdayList();
+                    updateNearestBirthday();
+                    
+                    // 重置表单并关闭
+                    birthdayForm.reset();
+                    document.getElementById('avatarPreview').src = 'https://picsum.photos/200/200?random=1';
+                    document.getElementById('imageUrl').value = '';
+                    toggleAddForm(false);
+                    
+                    // 恢复原始提交事件
+                    birthdayForm.onsubmit = originalSubmitHandler;
+                    
+                    showNotification('更新成功', `${birthdays[index].name}的生日已更新`);
+                }
+            };
+        }
+
+        // 切换添加表单显示状态
+        function toggleAddForm(show) {
+            const addForm = document.getElementById('addForm');
+            const addButton = document.getElementById('addButton');
+            
+            if (addForm && addButton) {
+                if (show) {
+                    addForm.classList.add('opacity-100');
+                    addForm.classList.remove('opacity-0', 'pointer-events-none', 'translate-y-10');
+                    addButton.innerHTML = '<i class="fa fa-times"></i>';
+                    addButton.classList.add('scale-110');
+                } else {
+                    addForm.classList.remove('opacity-100');
+                    addForm.classList.add('opacity-0', 'pointer-events-none', 'translate-y-10');
+                    addButton.innerHTML = '<i class="fa fa-plus"></i>';
+                    addButton.classList.remove('scale-110');
+                }
+            }
+        }
+
+        // 获取倒计时HTML
+        function getCountdownHtml(dateString) {
+            const birthDate = new Date(dateString);
+            const now = new Date();
+            
+            // 计算下一个生日
+            let nextBirthday = new Date(now.getFullYear(), birthDate.getMonth(), birthDate.getDate());
+            if (nextBirthday < now) {
+                nextBirthday.setFullYear(nextBirthday.getFullYear() + 1);
+            }
+            
+            // 计算剩余时间
+            const diff = nextBirthday - now;
+            
+            const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+            const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+            const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+            const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+            
+            return `
+                <div class="bg-gray-50 rounded-lg px-3 py-2 text-center">
+                    <div class="font-bold text-lg">${days.toString().padStart(2, '0')}</div>
+                    <div class="text-xs text-gray-500">天</div>
+                </div>
+                <div class="bg-gray-50 rounded-lg px-3 py-2 text-center">
+                    <div class="font-bold text-lg">${hours.toString().padStart(2, '0')}</div>
+                    <div class="text-xs text-gray-500">时</div>
+                </div>
+                <div class="bg-gray-50 rounded-lg px-3 py-2 text-center">
+                    <div class="font-bold text-lg">${minutes.toString().padStart(2, '0')}</div>
+                    <div class="text-xs text-gray-500">分</div>
+                </div>
+                <div class="bg-gray-50 rounded-lg px-3 py-2 text-center">
+                    <div class="font-bold text-lg">${seconds.toString().padStart(2, '0')}</div>
+                    <div class="text-xs text-gray-500">秒</div>
+                </div>
+            `;
+        }
+
+        // 更新所有倒计时 - 修复排序后倒计时不对应问题
+        function updateAllCountdowns() {
+            // 先对生日进行排序
+            // 先对生日进行排序
+            const sortedBirthdays = [...birthdays].sort((a, b) => {
+                const daysA = getDaysUntilNextBirthday(new Date(a.date));
+                const daysB = getDaysUntilNextBirthday(new Date(b.date));
+                return daysA - daysB;
+            });
+            
+            // 更新最近生日倒计时
+            updateNearestBirthday();
+            
+            // 更新列表中的倒计时 - 使用ID匹配而不是索引
+            const birthdayCards = document.querySelectorAll('.birthday-card');
+            birthdayCards.forEach(card => {
+                const id = card.dataset.id;
+                const birthday = sortedBirthdays.find(b => b.id === id);
+                
+                if (birthday) {
+                    const countdownEl = card.querySelector('.countdown-container');
+                    if (countdownEl) {
+                        countdownEl.innerHTML = getCountdownHtml(birthday.date);
+                    }
+                }
+            });
+            
+            // 更新主页即将到来的生日
+            if (document.getElementById('homePage').classList.contains('active')) {
+                loadUpcomingBirthdays();
+            }
+        }
+
+        // 显示通知
+        function showNotification(title, message) {
+            const notification = document.getElementById('notification');
+            const titleEl = document.getElementById('notificationTitle');
+            const messageEl = document.getElementById('notificationMessage');
+            const closeBtn = document.getElementById('closeNotification');
+            
+            if (!notification || !titleEl || !messageEl) return;
+            
+            titleEl.textContent = title;
+            messageEl.textContent = message;
+            
+            // 显示通知
+            notification.classList.remove('hidden');
+            
+            // 3秒后自动隐藏
+            const timeout = setTimeout(() => {
+                notification.classList.add('hidden');
+            }, 3000);
+            
+            // 点击关闭按钮
+            if (closeBtn) {
+                closeBtn.addEventListener('click', () => {
+                    notification.classList.add('hidden');
+                    clearTimeout(timeout);
+                });
+            }
+        }
+
+        // 展馆页面功能
+        function initGallery() {
+            // 加载时更新统计数据
+            updateGalleryStats();
+        }
+
+        // 更新展馆统计数据
+        function updateGalleryStats() {
+            // 从本地存储获取生日数据
+            const birthdays = JSON.parse(localStorage.getItem('birthdays') || '[]');
+            const totalCount = birthdays.length;
+            
+            // 更新总记录数
+            const totalCountEl = document.getElementById('profileBirthdayCount');
+            if (totalCountEl) {
+                totalCountEl.textContent = totalCount;
+            }
+            
+            // 计算本月生日数
+            const today = new Date();
+            const currentMonth = today.getMonth();
+            const thisMonthCount = birthdays.filter(birthday => {
+                const birthDate = new Date(birthday.date);
+                return birthDate.getMonth() === currentMonth;
+            }).length;
+            
+            // 更新本月生日数
+            const thisMonthEl = document.getElementById('profileThisMonth');
+            if (thisMonthEl) {
+                thisMonthEl.textContent = thisMonthCount;
+            }
+            
+            // 计算30天内生日数
+            const thirtyDaysLater = new Date();
+            thirtyDaysLater.setDate(today.getDate() + 30);
+            
+            const upcomingCount = birthdays.filter(birthday => {
+                const birthDate = new Date(birthday.date);
+                const nextBirthday = getNextBirthday(birthDate, today);
+                return nextBirthday <= thirtyDaysLater;
+            }).length;
+            
+            // 更新30天内生日数
+            const upcomingEl = document.getElementById('profileUpcoming');
+            if (upcomingEl) {
+                upcomingEl.textContent = upcomingCount;
+            }
+            
+            // 更新月份分布
+            updateMonthDistribution(birthdays);
+            
+            // 更新最后更新时间
+            const lastUpdated = localStorage.getItem('lastUpdated');
+            const lastUpdatedEl = document.getElementById('lastUpdated');
+            if (lastUpdated && lastUpdatedEl) {
+                const date = new Date(lastUpdated);
+                const options = { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' };
+                lastUpdatedEl.textContent = date.toLocaleString('zh-CN', options);
+            }
+        }
+
+        // 更新月份分布统计
+        function updateMonthDistribution(birthdays) {
+            // 初始化每个月的计数为0
+            const monthCounts = Array(12).fill(0);
+            
+            // 统计每个月的生日数量
+            birthdays.forEach(birthday => {
+                const birthDate = new Date(birthday.date);
+                const month = birthDate.getMonth(); // 0-11
+                monthCounts[month]++;
+            });
+            
+            // 更新UI
+            monthCounts.forEach((count, index) => {
+                const monthEl = document.getElementById(`month-${index + 1}`);
+                if (monthEl) {
+                    monthEl.textContent = count;
+                    
+                    // 根据数量添加不同的颜色
+                    monthEl.className = 'text-xl font-bold';
+                    if (count === 0) {
+                        monthEl.classList.add('text-gray-300');
+                    } else if (count === 1) {
+                        monthEl.classList.add('text-gray-700');
+                    } else if (count === 2) {
+                        monthEl.classList.add('text-fairyBlue');
+                    } else if (count >= 3) {
+                        monthEl.classList.add('text-fairyPink');
+                    }
+                }
+            });
+        }
+
+        // 获取下一个生日日期
+        function getNextBirthday(birthDate, referenceDate) {
+            let nextBirthday = new Date(referenceDate.getFullYear(), birthDate.getMonth(), birthDate.getDate());
+            
+            // 如果今年的生日已经过了，计算明年的
+            if (nextBirthday < referenceDate) {
+                nextBirthday.setFullYear(nextBirthday.getFullYear() + 1);
+            }
+            
+            return nextBirthday;
+        }
+
+        // 初始化添加表单样式
+        function initAddFormStyle() {
+            const addForm = document.getElementById('addForm');
+            if (addForm) {
+                // 初始样式
+                addForm.classList.add('fixed', 'bottom-[100px]', 'right-[30px]', 'z-50', 'transition-all', 'duration-300', 'opacity-0', 'pointer-events-none', 'translate-y-10');
+            }
+        }
+
+        // 初始化所有功能模块
+        document.addEventListener('DOMContentLoaded', function() {
+            createParticles();
+            initNavigation();
+            initMusicPlayer();
+            initBirthdayCountdown();
+            initGallery();
+            initHomePage();
+            initAddFormStyle();
+            
+            // 窗口大小改变时重新创建粒子
+            window.addEventListener('resize', createParticles);
+        });
+    </script>
+</body>
+</html>
