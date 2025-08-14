@@ -1,0 +1,340 @@
+<html lang="zh-CN"><head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>魔法生日倒计时</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
+    <script src="tailwind.config.js"></script>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body class="min-h-screen font-fairy transition-colors duration-700 bg-theme-fairyPink relative overflow-x-hidden">
+
+    <!-- 圆形导航菜单 -->
+    <div class="circle-nav">
+      <div class="nav-toggle" id="navToggle">
+          <i class="fa fa-home"></i>
+      </div>
+      <div class="nav-items" id="navItems">
+           <div class="nav-item" id="homeNav">
+             <i class="fa fa-home"></i>
+             <span class="nav-item-tooltip ml-2">主页</span>
+          </div>
+          <div class="nav-item" id="birthdayNav">
+             <i class="fa fa-birthday-cake"></i>
+              <span class="nav-item-tooltip ml-2">生日倒计时</span>
+          </div>
+         <div class="nav-item" id="galleryNav">
+            <i class="fa fa-university"></i>
+             <span class="nav-item-tooltip ml-2">展馆</span>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 动态粒子背景 -->
+    <div id="particles-container" class="fixed inset-0 pointer-events-none z-0"></div>
+    
+    <!-- 通知系统 -->
+    <div id="notification" class="notification">
+        <div class="notification-icon">
+            <i class="fa fa-birthday-cake"></i>
+        </div>
+        <div class="notification-content">
+            <div class="notification-title">生日快乐已添加！</div>
+            <div class="notification-message">魔法精灵们正在准备倒计时</div>
+        </div>
+        <button class="close-notification">
+            <i class="fa fa-times"></i>
+        </button>
+    </div>
+    
+    <!-- 音乐控制 -->
+    <div class="music-container">
+        <button id="musicToggle" class="music-button">
+            <i class="fa fa-music" aria-hidden="true"></i>
+        </button>
+        
+        <div class="music-controls">
+            <div class="music-info" id="currentTrack">
+                点击播放背景音乐
+            </div>
+            
+            <div class="music-visualizer" id="visualizer">
+                <div class="visualizer-bar"></div>
+                <div class="visualizer-bar"></div>
+                <div class="visualizer-bar"></div>
+                <div class="visualizer-bar"></div>
+                <div class="visualizer-bar"></div>
+                <div class="visualizer-bar"></div>
+                <div class="visualizer-bar"></div>
+                <div class="visualizer-bar"></div>
+                <div class="visualizer-bar"></div>
+                <div class="visualizer-bar"></div>
+                <div class="visualizer-bar"></div>
+                <div class="visualizer-bar"></div>
+            </div>
+            
+            <div class="progress-container" id="progressContainer">
+                <div class="progress-bar" id="progressBar"></div>
+            </div>
+            
+            <div class="control-buttons">
+                <button id="prevTrack" class="control-btn">
+                    <i class="fa fa-step-backward"></i>
+                </button>
+                <button id="playPauseBtn" class="control-btn play-btn">
+                    <i class="fa fa-play"></i>
+                </button>
+                <button id="nextTrack" class="control-btn">
+                    <i class="fa fa-step-forward"></i>
+                </button>
+            </div>
+            
+            <div class="volume-control">
+                <i class="fa fa-volume-up text-gray-500" id="volumeIcon"></i>
+                <input type="range" min="0" max="100" value="80" class="volume-slider" id="volumeSlider">
+            </div>
+        </div>
+    </div>
+    
+    <!-- 个人资料展示区域 -->
+    <div class="profile-section" id="profileSection">
+        <div class="close-profile" id="closeProfile">
+            <i class="fa fa-times"></i>
+        </div>
+        <div class="profile-content">
+            <div class="w-32 h-32 rounded-full bg-gradient-to-r from-fairyPrimary to-fairySecondary mx-auto mb-6 flex items-center justify-center overflow-hidden">
+                <i class="fa fa-user text-white text-6xl"></i>
+            </div>
+            <h2 class="text-4xl font-bold text-gray-700 mb-2">我的小天地</h2>
+            <p class="text-gray-600 mb-6 max-w-lg mx-auto">这是一个记录生活点滴、珍藏美好回忆的小空间，专门用来记录和倒计时亲友们的生日。</p>
+            
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+                <div class="fairy-card p-4">
+                    <div class="text-3xl text-fairyPrimary mb-2"><i class="fa fa-calendar"></i></div>
+                    <h3 class="font-bold text-gray-700 mb-1">记录的生日</h3>
+                    <p class="text-2xl font-bold text-gray-600" id="profileBirthdayCount">0</p>
+                </div>
+                <div class="fairy-card p-4">
+                    <div class="text-3xl text-fairyPrimary mb-2"><i class="fa fa-star"></i></div>
+                    <h3 class="font-bold text-gray-700 mb-1">本月生日</h3>
+                    <p class="text-2xl font-bold text-gray-600" id="profileThisMonth">0</p>
+                </div>
+                <div class="fairy-card p-4">
+                    <div class="text-3xl text-fairyPrimary mb-2"><i class="fa fa-heart"></i></div>
+                    <h3 class="font-bold text-gray-700 mb-1">即将到来</h3>
+                    <p class="text-2xl font-bold text-gray-600" id="profileUpcoming">0</p>
+                </div>
+            </div>
+            
+            <p class="text-gray-500 text-sm">最后更新: <span id="lastUpdated">刚刚</span></p>
+        </div>
+    </div>
+    
+    <!-- 主页内容 -->
+    <div id="homePage" class="page active">
+        <div class="container mx-auto px-4 py-12 relative z-10">
+            <header class="text-center mb-16 fade-in">
+                <h1 class="text-[clamp(2.5rem,6vw,4rem)] font-bold text-white text-shadow mb-4 pulse-slow gradient-animate bg-clip-text text-transparent bg-gradient-to-r from-white to-pink-100">魔法时光</h1>
+                <p class="text-[clamp(1.1rem,2.2vw,1.3rem)] text-white text-glow max-w-2xl mx-auto slide-in" style="animation-delay: 0.3s">
+                    记录生活中的每一个特别时刻，不错过任何值得庆祝的日子
+                </p>
+            </header>
+            
+<div class="home-features">
+    <!-- 生日倒计时功能卡片 -->
+    <div class="feature-card hover-lift fade-in" style="animation-delay: 0.5s">
+        <div class="feature-icon bg-gradient-to-r from-fairyPrimary to-fairySecondary">
+            <i class="fa fa-birthday-cake"></i>
+        </div>
+        <h3 class="feature-title">生日倒计时</h3>
+        <p class="feature-description">记录亲友的生日，获取精确倒计时，不错过每一个祝福时刻</p>
+        <button class="fairy-button px-6 py-2" id="goToBirthdayBtn">
+            开始使用 <i class="fa fa-arrow-right ml-2"></i>
+        </button>
+    </div>
+    
+    <!-- 展馆功能卡片 -->
+    <div class="feature-card hover-lift fade-in" style="animation-delay: 0.7s">
+        <div class="feature-icon bg-gradient-to-r from-fairyGreen to-fairyBlue">
+            <i class="fa fa-university"></i>
+        </div>
+        <h3 class="feature-title">时光展馆</h3>
+        <p class="feature-description">展示您记录的所有重要时刻，珍藏美好回忆</p>
+        <button class="fairy-button px-6 py-2" id="goToGalleryBtn">
+            进入展馆 <i class="fa fa-arrow-right ml-2"></i>
+        </button>
+    </div>
+</div>
+            
+            <div class="text-center mt-16 fade-in" style="animation-delay: 1.3s">
+                <h2 class="text-[clamp(1.8rem,4vw,2.5rem)] font-bold text-white text-shadow mb-6">记录美好，珍藏回忆</h2>
+                <p class="text-white/80 max-w-2xl mx-auto mb-8">
+                    无论是生日、纪念日还是其他重要时刻，都值得被精心记录和期待。
+                    让我们一起，不错过生活中的每一个精彩瞬间。
+                </p>
+                <button class="fairy-button px-8 py-3 text-lg hover-lift ripple" id="startJourneyBtn">
+                    <i class="fa fa-magic mr-2"></i> 开始我的时光之旅
+                </button>
+            </div>
+        </div>
+        
+        <!-- 页脚 -->
+        <footer class="mt-16 py-6 text-center text-white/70 relative z-10 fade-in" style="animation-delay: 1.5s">
+            <p class="text-shadow">魔法时光 - 珍藏生活中的每一刻</p>
+            <p class="mt-2 text-sm">所有数据安全存储在您的设备上</p>
+        </footer>
+    </div>
+    
+    <!-- 生日倒计时页面 -->
+    <div id="birthdayPage" class="page">
+        <div class="container mx-auto px-4 py-12 relative z-10">
+            <!-- 标题区域 -->
+            <header class="text-center mb-10 fade-in">
+                <h1 class="text-[clamp(2.5rem,6vw,4rem)] font-bold text-white text-shadow mb-4 pulse-slow gradient-animate bg-clip-text text-transparent bg-gradient-to-r from-white to-pink-100">魔法生日倒计时</h1>
+                <p class="text-[clamp(1.1rem,2.2vw,1.3rem)] text-white text-glow max-w-2xl mx-auto slide-in" style="animation-delay: 0.3s">
+                    添加亲友的生日，为你倒数重要的日子！所有数据保存在本地，刷新页面不会丢失
+                </p>
+            </header>
+            
+            <!-- 倒计时显示区域 -->
+            <div id="countdownContainer" class="max-w-4xl mx-auto mb-16 fade-in" style="animation-delay: 0.5s">
+                <div class="text-center mb-8">
+                    <h2 id="nearestPerson" class="text-[clamp(1.8rem,4vw,3rem)] font-bold text-white text-shadow mb-2">添加生日开始倒计时</h2>
+                    <p id="nearestDate" class="text-xl text-white/90">距离最近的生日还有...</p>
+                </div>
+                
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-5 md:gap-7">
+                    <div class="fairy-card p-5 transform transition-all hover-lift">
+                        <div class="text-center mb-2 text-gray-500">天</div>
+                        <div id="days" class="text-[clamp(3rem,7vw,4.5rem)] font-bold text-center text-gray-700">00</div>
+                    </div>
+                    <div class="fairy-card p-5 transform transition-all hover-lift" style="animation-delay: 0.1s">
+                        <div class="text-center mb-2 text-gray-500">时</div>
+                        <div id="hours" class="text-[clamp(3rem,7vw,4.5rem)] font-bold text-center text-gray-700">00</div>
+                    </div>
+                    <div class="fairy-card p-5 transform transition-all hover-lift" style="animation-delay: 0.2s">
+                        <div class="text-center mb-2 text-gray-500">分</div>
+                        <div id="minutes" class="text-[clamp(3rem,7vw,4.5rem)] font-bold text-center text-gray-700">00</div>
+                    </div>
+                    <div class="fairy-card p-5 transform transition-all hover-lift" style="animation-delay: 0.3s">
+                        <div class="text-center mb-2 text-gray-500">秒</div>
+                        <div id="seconds" class="text-[clamp(3rem,7vw,4.5rem)] font-bold text-center text-gray-700">00</div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 生日列表 -->
+            <div class="max-w-5xl mx-auto fade-in" style="animation-delay: 0.7s">
+                <div class="flex justify-between items-center mb-6">
+                    <h2 class="text-[clamp(1.8rem,4vw,2.5rem)] font-bold text-white text-shadow">所有生日列表</h2>
+                    <span class="text-white/80 text-sm">共 <span id="birthdayCount">0</span> 个生日</span>
+                </div>
+                
+                <div id="birthdaysList" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    <!-- 生日卡片将由JS动态生成 -->
+                    <div class="fairy-card p-6 text-center hover-lift">
+                        <div class="text-4xl text-fairyPrimary mb-4">
+                            <i class="fa fa-birthday-cake"></i>
+                        </div>
+                        <h3 class="text-xl font-bold text-gray-700 mb-2">添加第一个生日</h3>
+                        <p class="text-gray-600 mb-4">点击右下角的添加按钮开始</p>
+                        <div class="text-3xl text-fairyPrimary floating">
+                            <i class="fa fa-arrow-down"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 页脚 -->
+        <footer class="mt-16 py-6 text-center text-white/70 relative z-10 fade-in" style="animation-delay: 0.9s">
+            <p class="text-shadow">让每一个生日都值得期待</p>
+            <p class="mt-2 text-sm">数据保存在您的浏览器本地存储中</p>
+        </footer>
+    </div>
+<!-- 展馆页面 -->
+<div id="galleryPage" class="page">
+    <div class="container mx-auto px-4 py-12 relative z-10 text-center">
+        <div class="max-w-2xl mx-auto fairy-card p-10 mt-16">
+            <div class="text-6xl text-fairyGreen mb-6">
+                <i class="fa fa-university floating"></i>
+            </div>
+            <h2 class="text-3xl font-bold text-gray-700 mb-4">时光展馆</h2>
+            <p class="text-gray-600 mb-8">这里展示着您记录的所有美好时刻，每一个都值得珍藏</p>
+            
+            <div class="gallery-stats grid grid-cols-2 gap-4 mb-8">
+                <div class="fairy-card p-4">
+                    <div class="text-2xl text-fairyPrimary mb-1"><i class="fa fa-birthday-cake"></i></div>
+                    <h3 class="font-bold text-gray-700">生日记录</h3>
+                    <p class="text-2xl font-bold text-gray-600" id="galleryBirthdayCount">0</p>
+                </div>
+            </div>
+            
+            <button class="fairy-button px-6 py-3" id="backFromGalleryBtn">
+                <i class="fa fa-arrow-left mr-2"></i> 返回主页
+            </button>
+        </div>
+    </div>
+</div>
+    <!-- 右下角添加按钮 -->
+    <div class="fixed bottom-6 right-6 z-50" id="addButtonContainer">
+        <button id="addButton" class="w-16 h-16 rounded-full fairy-button flex items-center justify-center text-2xl shadow-xl transition-all transform hover:scale-110 hover-lift ripple">
+            <i class="fa fa-plus"></i>
+        </button>
+    </div>
+    
+    <!-- 添加生日表单 -->
+    <div id="addForm" class="add-form">
+        <div class="fairy-card p-6 w-[340px] hover-lift">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-xl font-bold text-gray-700">添加生日</h3>
+                <button id="closeForm" class="text-gray-500 hover:text-gray-700 transition-colors">
+                    <i class="fa fa-times"></i>
+                </button>
+            </div>
+            
+            <form id="birthdayForm" class="space-y-4">
+                <!-- 头像上传区域 -->
+                <div class="avatar-upload">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">头像</label>
+                    <div class="avatar-preview" id="avatarPreview">
+                        <div class="avatar-placeholder">
+                            <i class="fa fa-user"></i>
+                        </div>
+                    </div>
+                    <button type="button" class="upload-btn" id="uploadBtn">
+                        <i class="fa fa-upload mr-1"></i> 上传图片
+                    </button>
+                    <input type="file" id="imageUpload" accept="image/*" class="hidden">
+                    <input type="url" id="imageUrl" placeholder="或输入图片链接" class="fairy-input image-url-input focus:ring-2 focus:ring-fairyPrimary">
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">姓名</label>
+                    <input type="text" id="nameInput" placeholder="例如: 小王子" required="" class="w-full fairy-input focus:ring-2 focus:ring-fairyPrimary">
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">生日日期</label>
+                    <input type="date" id="dateInput" required="" class="w-full fairy-input focus:ring-2 focus:ring-fairyPrimary">
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">备注 (可选)</label>
+                    <input type="text" id="noteInput" placeholder="例如: 送什么礼物" class="w-full fairy-input focus:ring-2 focus:ring-fairyPrimary">
+                </div>
+                
+                <button type="submit" class="w-full fairy-button py-3 px-4 mt-2 hover-lift ripple">
+                    <i class="fa fa-magic mr-2"></i> 添加生日
+                </button>
+            </form>
+        </div>
+    </div>
+    
+    <!-- 背景音乐元素 -->
+    <audio id="backgroundMusic" loop="">
+        <!-- 音乐文件会通过JavaScript动态加载 -->
+    </audio>
+    <script src="app.js"></script>
+</body></html>
+    
